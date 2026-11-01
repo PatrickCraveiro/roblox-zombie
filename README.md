@@ -153,6 +153,16 @@ Pra publicar e atualizar o jogo no Roblox: [docs/publicar.md](docs/publicar.md).
 | E | Comprar arma na parede / abrir porta / Caixa Surpresa |
 | Segurar E | Pregar tábuas na barricada (perto do buraco) |
 
+**Celular e tablet** (`src/client/MobileControls.luau`): o analógico da Roblox anda (lado esquerdo) e
+arrastar o dedo na tela gira a câmera. No lado direito ficam os botões **TIRO** (segure; arrastando o
+mesmo dedo também gira a câmera), **MIRA** e **CORRER** (um toque liga/desliga), **RECARGA**,
+**TROCAR** (só com 2 armas) e **PREGAR** (aparece perto de barricada; segure). Os botões aparecem
+quando a pessoa toca na tela e somem se ela usar teclado. Pontos, arma e munição sobem pro canto de
+cima. Pra testar no Studio: aba **Testar → Dispositivo**, escolha um celular e aperte Play.
+
+**Controle de videogame**: R2 atira, L2 mira, B recarrega, Y troca de arma, L3 corre, segurar X prega
+tábuas (X também usa portas, paredes e a caixa).
+
 ## Editando uma fase no Studio (opcional)
 
 As fases são geradas sozinhas. Se quiser decorar uma no Studio, gere uma cópia editável: na barra de

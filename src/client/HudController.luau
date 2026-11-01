@@ -397,7 +397,7 @@ end
 local function popPoints(delta: number)
 	local label = makeText({
 		AnchorPoint = Vector2.new(1, 1),
-		Position = UDim2.new(1, -200, 1, -135),
+		Position = pointsLabel.Position + UDim2.fromOffset(-160, -5),
 		Size = UDim2.fromOffset(100, 30),
 		TextSize = 22,
 		TextColor3 = if delta > 0 then GOLD else Color3.fromRGB(255, 90, 90),
@@ -568,6 +568,13 @@ function HudController.setWeapon(name: string, mag: number?, reserve: number?, l
 	else
 		ammoLabel.Text = ""
 	end
+end
+
+-- Celular: pontos, arma e munição sobem pro canto de cima (embaixo ficam os botões de toque)
+function HudController.setTouchLayout(enabled: boolean)
+	pointsLabel.Position = if enabled then UDim2.new(1, -20, 0, 100) else UDim2.new(1, -40, 1, -130)
+	weaponLabel.Position = if enabled then UDim2.new(1, -20, 0, 128) else UDim2.new(1, -40, 1, -85)
+	ammoLabel.Position = if enabled then UDim2.new(1, -20, 0, 180) else UDim2.new(1, -40, 1, -30)
 end
 
 function HudController.setHint(text: string)

@@ -10,8 +10,9 @@
    (Survival/Shooter). Se você já tinha publicado esse place antes (pra testar o ranking), use só
    **Arquivo → Publicar no Roblox** (Alt+P), que atualiza o mesmo jogo.
 3. **Início → Configurações do jogo** (Game Settings):
-   - **Informações básicas → Dispositivos**: deixe só **Computador** por enquanto (ainda não tem
-     controle de toque pra celular/tablet nem de controle de videogame).
+   - **Informações básicas → Dispositivos**: **Computador**, **Celular** e **Tablet** (tem botões de
+     toque). Teste antes no emulador do Studio (aba Testar → Dispositivo) ou no seu celular com o
+     jogo ainda privado. **Console** só depois de testar com um controle de videogame.
    - **Permissões**: deixe **Privado** até testar; depois mude pra **Público**.
    - **Segurança**: ligue **Permitir acesso do Studio aos serviços de API** (pra testar o salvamento
      e o ranking no Studio).

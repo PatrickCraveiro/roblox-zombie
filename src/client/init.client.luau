@@ -12,6 +12,7 @@ local AuraController = require(script.AuraController)
 local BarricadeController = require(script.BarricadeController)
 local Effects = require(script.Effects)
 local HudController = require(script.HudController)
+local MobileControls = require(script.MobileControls)
 local WeaponController = require(script.WeaponController)
 
 -- pré-carrega os sons pra o primeiro tiro não sair mudo
@@ -43,3 +44,4 @@ WeaponController.init(HudController)
 BarricadeController.init(HudController)
 ArsenalController.init()
 AuraController.init()
+MobileControls.init(WeaponController, BarricadeController, HudController)

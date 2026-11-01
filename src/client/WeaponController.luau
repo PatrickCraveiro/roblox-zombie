@@ -3,6 +3,8 @@
 --
 -- Controles: botão esquerdo atira, direito mira, R recarrega,
 -- 1/2 ou rodinha troca de arma, Shift corre.
+-- Controle de videogame: R2 atira, L2 mira, B recarrega, Y troca, L3 corre.
+-- Celular/tablet: os botões de toque (MobileControls) chamam as funções do fim do arquivo.
 
 local CollectionService = game:GetService("CollectionService")
 local Players = game:GetService("Players")
@@ -39,6 +41,7 @@ local viewmodel: Model? = nil
 local viewmodelId: string? = nil
 local aimOffset = CFrame.new(0, -0.6, -1.1)
 
+local touchMode = false -- botões de toque na tela (muda o texto das dicas)
 local triggerHeld = false
 local aimHeld = false
 local sprintHeld = false
@@ -104,7 +107,7 @@ local function refreshHud()
 	elseif slot.mag == 0 and slot.reserve == 0 then
 		hud.setHint("SEM MUNIÇÃO")
 	elseif low and slot.reserve > 0 then
-		hud.setHint("[R] RECARREGAR")
+		hud.setHint(if touchMode then "APERTE RECARGA" else "[R] RECARREGAR")
 	else
 		hud.setHint("")
 	end
@@ -428,29 +431,33 @@ local function onInputBegan(input: InputObject, processed: boolean)
 	if processed then
 		return
 	end
-	if input.KeyCode == Enum.KeyCode.LeftShift then
+	local key = input.KeyCode
+	if key == Enum.KeyCode.LeftShift then
 		sprintHeld = true
-	elseif input.UserInputType == Enum.UserInputType.MouseButton1 then
-		triggerHeld = true
-		sprinting = false
-		fire()
-	elseif input.UserInputType == Enum.UserInputType.MouseButton2 then
+	elseif key == Enum.KeyCode.ButtonL3 then
+		sprintHeld = not sprintHeld
+	elseif input.UserInputType == Enum.UserInputType.MouseButton1 or key == Enum.KeyCode.ButtonR2 then
+		WeaponController.setTrigger(true)
+	elseif input.UserInputType == Enum.UserInputType.MouseButton2 or key == Enum.KeyCode.ButtonL2 then
 		aimHeld = true
-	elseif input.KeyCode == Enum.KeyCode.R then
+	elseif key == Enum.KeyCode.R or key == Enum.KeyCode.ButtonB then
 		startReload()
-	elseif input.KeyCode == Enum.KeyCode.One then
+	elseif key == Enum.KeyCode.One then
 		equip(1)
-	elseif input.KeyCode == Enum.KeyCode.Two then
+	elseif key == Enum.KeyCode.Two then
 		equip(2)
+	elseif key == Enum.KeyCode.ButtonY then
+		WeaponController.nextWeapon()
 	end
 end
 
 local function onInputEnded(input: InputObject)
-	if input.UserInputType == Enum.UserInputType.MouseButton1 then
+	local key = input.KeyCode
+	if input.UserInputType == Enum.UserInputType.MouseButton1 or key == Enum.KeyCode.ButtonR2 then
 		triggerHeld = false
-	elseif input.UserInputType == Enum.UserInputType.MouseButton2 then
+	elseif input.UserInputType == Enum.UserInputType.MouseButton2 or key == Enum.KeyCode.ButtonL2 then
 		aimHeld = false
-	elseif input.KeyCode == Enum.KeyCode.LeftShift then
+	elseif key == Enum.KeyCode.LeftShift then
 		sprintHeld = false
 	end
 end
@@ -459,9 +466,8 @@ local function onInputChanged(input: InputObject, processed: boolean)
 	if processed then
 		return
 	end
-	local count = #inventory.slots
-	if input.UserInputType == Enum.UserInputType.MouseWheel and count > 1 then
-		equip(inventory.equipped % count + 1)
+	if input.UserInputType == Enum.UserInputType.MouseWheel then
+		WeaponController.nextWeapon()
 	end
 end
 
@@ -490,6 +496,47 @@ local function onCharacterAdded(newCharacter: Model)
 	end
 
 	updateViewmodel()
+	refreshHud()
+end
+
+-- Usado pelo mouse, pelo controle e pelos botões de toque
+function WeaponController.setTrigger(down: boolean)
+	triggerHeld = down
+	if down then
+		sprinting = false
+		fire()
+	end
+end
+
+function WeaponController.toggleAim()
+	aimHeld = not aimHeld
+end
+
+function WeaponController.toggleSprint()
+	sprintHeld = not sprintHeld
+end
+
+function WeaponController.reload()
+	startReload()
+end
+
+function WeaponController.nextWeapon()
+	local count = #inventory.slots
+	if count > 1 then
+		equip(inventory.equipped % count + 1)
+	end
+end
+
+-- Pros botões de toque mostrarem o estado (aceso = ligado)
+function WeaponController.getState(): { aiming: boolean, sprinting: boolean, weaponCount: number }
+	return { aiming = aimHeld, sprinting = sprintHeld, weaponCount = #inventory.slots }
+end
+
+function WeaponController.setTouchMode(enabled: boolean)
+	touchMode = enabled
+	if not enabled then
+		triggerHeld, aimHeld, sprintHeld = false, false, false
+	end
 	refreshHud()
 end
 

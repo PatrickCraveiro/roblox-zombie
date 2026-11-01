@@ -22,6 +22,8 @@ local MIN_LOOK_DOT = 0 -- 0 = basta o buraco não estar atrás de você
 local hud
 local repairRemote: RemoteEvent? = nil
 local holding = false
+local touchMode = false -- celular: segura o botão PREGAR em vez do E
+local available = false -- tem barricada pra consertar agora
 local lastSent = 0
 
 -- Barricada que dá pra consertar agora (a mais perto) e quantas tábuas ela tem
@@ -68,15 +70,33 @@ end
 
 local function update()
 	local barricade, planks, maxPlanks = findBarricade()
+	available = barricade ~= nil
 	if not barricade then
 		hud.setActionHint("")
 		return
 	end
-	hud.setActionHint(`Segure [E] pra pregar tábuas   {planks}/{maxPlanks}`)
+	local button = if touchMode then "o botão PREGAR" else "[E]"
+	hud.setActionHint(`Segure {button} pra pregar tábuas   {planks}/{maxPlanks}`)
 	if holding and repairRemote and os.clock() - lastSent >= Config.BarricadeRepairCooldown then
 		lastSent = os.clock()
 		repairRemote:FireServer(barricade)
 	end
+end
+
+-- Pros botões de toque (MobileControls) e pro controle de videogame (segurar X)
+function BarricadeController.setHolding(down: boolean)
+	holding = down
+	if down then
+		update() -- a primeira tábua sai na hora
+	end
+end
+
+function BarricadeController.isAvailable(): boolean
+	return available
+end
+
+function BarricadeController.setTouchMode(enabled: boolean)
+	touchMode = enabled
 end
 
 function BarricadeController.init(hudController)
@@ -86,13 +106,12 @@ function BarricadeController.init(hudController)
 	end)
 
 	UserInputService.InputBegan:Connect(function(input, processed)
-		if not processed and input.KeyCode == Enum.KeyCode.E then
-			holding = true
-			update() -- a primeira tábua sai na hora
+		if not processed and (input.KeyCode == Enum.KeyCode.E or input.KeyCode == Enum.KeyCode.ButtonX) then
+			BarricadeController.setHolding(true)
 		end
 	end)
 	UserInputService.InputEnded:Connect(function(input)
-		if input.KeyCode == Enum.KeyCode.E then
+		if input.KeyCode == Enum.KeyCode.E or input.KeyCode == Enum.KeyCode.ButtonX then
 			holding = false
 		end
 	end)

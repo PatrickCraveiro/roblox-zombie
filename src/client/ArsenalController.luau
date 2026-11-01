@@ -8,6 +8,7 @@ local ProximityPromptService = game:GetService("ProximityPromptService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
+local Workspace = game:GetService("Workspace")
 
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Config = require(Shared:WaitForChild("Config"))
@@ -187,6 +188,15 @@ local function build()
 	}, gui)
 	make("UICorner", { CornerRadius = UDim.new(0, 12) }, panel)
 	make("UIStroke", { Color = GREEN, Thickness = 3 }, panel)
+
+	-- tela pequena (celular): a janela encolhe pra caber
+	local panelScale = make("UIScale", {}, panel)
+	local function fitScreen()
+		local viewport = Workspace.CurrentCamera.ViewportSize
+		panelScale.Scale = math.clamp(math.min((viewport.X - 20) / 760, (viewport.Y - 20) / 500), 0.4, 1)
+	end
+	fitScreen()
+	Workspace.CurrentCamera:GetPropertyChangedSignal("ViewportSize"):Connect(fitScreen)
 
 	make("TextLabel", {
 		Position = UDim2.fromOffset(20, 12),
