@@ -1,0 +1,58 @@
+{
+  "name": "roblox-zombies",
+  "tree": {
+    "$className": "DataModel",
+
+    "ReplicatedStorage": {
+      "$className": "ReplicatedStorage",
+      "Shared": {
+        "$path": "src/shared"
+      },
+      "Remotes": {
+        "$className": "Folder",
+        "WeaponFire": { "$className": "RemoteEvent" },
+        "WeaponReload": { "$className": "RemoteEvent" },
+        "WeaponEquip": { "$className": "RemoteEvent" },
+        "InventoryUpdate": { "$className": "RemoteEvent" },
+        "GetInventory": { "$className": "RemoteFunction" },
+        "Announce": { "$className": "RemoteEvent" },
+        "Notify": { "$className": "RemoteEvent" },
+        "ShotFired": { "$className": "RemoteEvent" },
+        "Gore": { "$className": "RemoteEvent" },
+        "DamageNumber": { "$className": "RemoteEvent" },
+        "HitDirection": { "$className": "RemoteEvent" },
+        "RepairBarricade": { "$className": "RemoteEvent" }
+      }
+    },
+
+    "ServerScriptService": {
+      "$className": "ServerScriptService",
+      "Server": {
+        "$path": "src/server"
+      }
+    },
+
+    "StarterPlayer": {
+      "$className": "StarterPlayer",
+      "StarterPlayerScripts": {
+        "$className": "StarterPlayerScripts",
+        "Client": {
+          "$path": "src/client"
+        }
+      },
+      "StarterCharacterScripts": {
+        "$className": "StarterCharacterScripts",
+        "Health": {
+          "$path": "src/character/Health.server.luau"
+        }
+      }
+    },
+
+    "Players": {
+      "$className": "Players",
+      "$properties": {
+        "CharacterAutoLoads": false
+      }
+    }
+  }
+}
