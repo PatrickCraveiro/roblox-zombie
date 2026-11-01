@@ -10,10 +10,13 @@
 local CollectionService = game:GetService("CollectionService")
 local DataStoreService = game:GetService("DataStoreService")
 local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
 
 local RankingService = {}
 
 local VERSION = "v1" -- trocar zera o ranking (cria listas novas)
+-- testes no Studio vão pra listas separadas (não aparecem no ranking do jogo publicado)
+local SUFFIX = if RunService:IsStudio() then "_Studio" else ""
 local TOP = 5
 local REFRESH_INTERVAL = 90 -- segundos entre atualizações do quadro (limite de leituras da Roblox)
 local MIN_REFRESH_GAP = 65
@@ -30,7 +33,7 @@ local dirty = true
 local lastRefresh = -math.huge
 
 local function getStore(scope: string, stat: string): OrderedDataStore
-	local storeName = `Ranking_{scope}_{stat}_{VERSION}`
+	local storeName = `Ranking_{scope}_{stat}_{VERSION}{SUFFIX}`
 	if not stores[storeName] then
 		stores[storeName] = DataStoreService:GetOrderedDataStore(storeName)
 	end

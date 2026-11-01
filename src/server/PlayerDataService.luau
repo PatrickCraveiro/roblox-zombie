@@ -14,6 +14,7 @@
 local DataStoreService = game:GetService("DataStoreService")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
 
 local Config = require(ReplicatedStorage.Shared.Config)
 local Progression = require(ReplicatedStorage.Shared.Progression)
@@ -24,7 +25,9 @@ local Remotes = ReplicatedStorage.Remotes
 
 local PlayerDataService = {}
 
-local STORE_NAME = "PlayerData_v1"
+-- no Studio salva numa cópia separada: os testes (com passes e bônus de teste) não mexem no
+-- progresso de verdade de ninguém no jogo publicado
+local STORE_NAME = if RunService:IsStudio() then "PlayerData_v1_Studio" else "PlayerData_v1"
 
 type Profile = {
 	coins: number,

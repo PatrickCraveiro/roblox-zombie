@@ -136,6 +136,10 @@ minuto e meio. Usa o DataStore da Roblox (`src/server/RankingService.luau`).
 **Pra funcionar no Studio**: publique o jogo (Arquivo → Publicar no Roblox) e ligue
 **Game Settings → Security → Enable Studio Access to API Services**. Sem isso o quadro mostra
 "Ranking indisponível". Pra zerar o ranking, troque `VERSION` no RankingService.
+No Studio o ranking e o progresso dos jogadores ficam em cópias separadas (sufixo `_Studio`), pra os
+testes não aparecerem no jogo publicado.
+
+Pra publicar e atualizar o jogo no Roblox: [docs/publicar.md](docs/publicar.md).
 
 ## Controles
 
