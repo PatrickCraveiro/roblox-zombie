@@ -14,6 +14,7 @@ local BoxService = require(script.Parent.BoxService)
 local DoorService = require(script.Parent.DoorService)
 local MapService = require(script.Parent.MapService)
 local PointsService = require(script.Parent.PointsService)
+local RankingService = require(script.Parent.RankingService)
 local ShopService = require(script.Parent.ShopService)
 local WeaponService = require(script.Parent.WeaponService)
 local ZombieService = require(script.Parent.ZombieService)
@@ -152,6 +153,7 @@ local function endMatch()
 	local players = matchPlayers
 	matchPlayers = {}
 	for player in players do
+		RankingService.recordMatch(player, PointsService.getMatchStats(player))
 		player:SetAttribute("InMatch", false)
 		ShopService.resetPlayer(player)
 		if player.Parent then
@@ -294,6 +296,8 @@ function RoundService.init()
 
 	Players.PlayerRemoving:Connect(function(player)
 		if matchPlayers[player] then
+			-- saiu no meio da partida: o que ele fez até ali entra no ranking
+			RankingService.recordMatch(player, PointsService.getMatchStats(player))
 			matchPlayers[player] = nil
 			-- todo mundo da partida saiu do jogo: encerra
 			if currentMap and next(matchPlayers) == nil then

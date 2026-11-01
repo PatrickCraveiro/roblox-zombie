@@ -298,6 +298,58 @@ local function stadiumFacade(parent: Instance, map: MapInfo, x: number, frontZ: 
 	end
 end
 
+-- Quadro do ranking (o RankingService preenche as listas "List_<Best|Total>_<stat>" e o "Status")
+local function rankingBoard(parent: Instance, position: Vector3, facing: Vector3)
+	local width, height = 34, 15
+	local base = CFrame.lookAt(position, position + facing)
+	for _, x in { -width / 2 + 1, width / 2 - 1 } do
+		box(parent, "RankingPost", Vector3.new(0.8, height + 2, 0.8), base * CFrame.new(x, (height + 2) / 2, 0.6), COLOR.DarkMetal, Enum.Material.Metal)
+	end
+	local board = box(parent, "RankingBoard", Vector3.new(width, height, 0.6), base * CFrame.new(0, 2 + height / 2, 0), Color3.fromRGB(18, 22, 30))
+	tag(board, "RankingBoard")
+	box(parent, "RankingFrame", Vector3.new(width + 0.6, 0.6, 0.8), base * CFrame.new(0, 2 + height + 0.3, 0), COLOR.Yellow, Enum.Material.Neon)
+
+	local gui = Instance.new("SurfaceGui")
+	gui.Face = Enum.NormalId.Front
+	gui.SizingMode = Enum.SurfaceGuiSizingMode.PixelsPerStud
+	gui.PixelsPerStud = 30
+	gui.LightInfluence = 0
+	gui.Parent = board
+	local function label(name: string, x: number, y: number, w: number, h: number, text: string, color: Color3, font: Enum.Font, alignLeft: boolean?)
+		local textLabel = Instance.new("TextLabel")
+		textLabel.Name = name
+		textLabel.Position = UDim2.fromScale(x, y)
+		textLabel.Size = UDim2.fromScale(w, h)
+		textLabel.BackgroundTransparency = 1
+		textLabel.TextScaled = true
+		textLabel.RichText = true
+		textLabel.Font = font
+		textLabel.TextColor3 = color
+		textLabel.Text = text
+		textLabel.TextXAlignment = if alignLeft then Enum.TextXAlignment.Left else Enum.TextXAlignment.Center
+		textLabel.TextYAlignment = if alignLeft then Enum.TextYAlignment.Top else Enum.TextYAlignment.Center
+		textLabel.Parent = gui
+	end
+
+	label("Title", 0.02, 0.02, 0.96, 0.11, "RANKING DOS SOBREVIVENTES", COLOR.Yellow, Enum.Font.GothamBlack)
+	local columns = { { "Kills", "ABATES" }, { "Headshots", "HEADSHOTS" }, { "Points", "PONTOS" } }
+	for sectionIndex, section in { { "Best", "RECORDE EM UMA PARTIDA" }, { "Total", "TOTAL GERAL" } } do
+		local sectionX = 0.02 + (sectionIndex - 1) * 0.5
+		label("Section", sectionX, 0.15, 0.46, 0.08, section[2], if sectionIndex == 1 then Color3.fromRGB(255, 120, 90) else Color3.fromRGB(110, 200, 255), Enum.Font.GothamBlack)
+		for columnIndex, column in columns do
+			local columnX = sectionX + (columnIndex - 1) * (0.46 / 3)
+			label("Header", columnX, 0.25, 0.46 / 3, 0.06, column[2], COLOR.White, Enum.Font.GothamBold)
+			label(`List_{section[1]}_{column[1]}`, columnX + 0.005, 0.33, 0.46 / 3 - 0.01, 0.56, "carregando...", Color3.fromRGB(220, 220, 220), Enum.Font.GothamMedium, true)
+		end
+	end
+	label("Status", 0.02, 0.91, 0.96, 0.06, "carregando o ranking...", Color3.fromRGB(150, 150, 160), Enum.Font.Gotham)
+
+	local light = Instance.new("PointLight")
+	light.Range = 18
+	light.Brightness = 1
+	light.Parent = board
+end
+
 local function buildPlaza(parent: Instance, maps: { MapInfo })
 	local width, depth = MAX_X - MIN_X, MAX_Z - MIN_Z
 	local centerX, centerZ = (MIN_X + MAX_X) / 2, (MIN_Z + MAX_Z) / 2
@@ -341,8 +393,12 @@ local function buildPlaza(parent: Instance, maps: { MapInfo })
 		end
 	end
 
+	-- quadro do ranking, à direita de quem nasce (fora dos caminhos), virado pro spawn
+	local rankingPosition = Vector3.new(78, 0, 52)
+	rankingBoard(parent, rankingPosition, (Vector3.new(30, 0, 55) - rankingPosition).Unit)
+
 	-- placa de boas-vindas ao lado do spawn
-	local welcomePosition = Vector3.new(55, 4, 45)
+	local welcomePosition = Vector3.new(-10, 4, 48)
 	local welcome = box(parent, "WelcomeBoard", Vector3.new(14, 7, 0.4), CFrame.lookAt(welcomePosition, Vector3.new(30, 4, 55)), Color3.fromRGB(25, 25, 30))
 	writeOn(welcome, Enum.NormalId.Front, "PRA JOGAR: pare na porta de uma fase\n(Supermercado ou Estádio)\n\nTREINAMENTO (prédio à esquerda):\nteste todas as armas nos zumbis de treino", COLOR.White)
 	block(parent, "WelcomePost", Vector3.new(0.5, 1, 0.5), welcomePosition.X, welcomePosition.Z, COLOR.DarkMetal)

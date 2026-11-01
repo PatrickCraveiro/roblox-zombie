@@ -40,6 +40,21 @@ Quiosques espalhados pelo mapa (itens e preços em `src/shared/Shop.luau`, efeit
 As melhorias aparecem como selos coloridos no canto da tela e somem quando você cai.
 Placar: Abates, Headshots (abate com tiro na cabeça, +50 pontos de bônus) e Pontos.
 
+## Ranking (salvo na nuvem da Roblox)
+
+O quadro "RANKING DOS SOBREVIVENTES" no lobby mostra os 5 melhores em abates, headshots e pontos
+(pontos **ganhos**, gastar na loja não diminui), de dois jeitos:
+
+- **Recorde em uma partida**: o máximo que alguém já fez numa partida só
+- **Total geral**: a soma de todas as partidas
+
+Salva quando a partida acaba (ou quando o jogador sai no meio dela) e o quadro atualiza a cada
+minuto e meio. Usa o DataStore da Roblox (`src/server/RankingService.luau`).
+
+**Pra funcionar no Studio**: publique o jogo (Arquivo → Publicar no Roblox) e ligue
+**Game Settings → Security → Enable Studio Access to API Services**. Sem isso o quadro mostra
+"Ranking indisponível". Pra zerar o ranking, troque `VERSION` no RankingService.
+
 ## Controles
 
 | Tecla | Ação |

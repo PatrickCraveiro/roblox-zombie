@@ -49,11 +49,27 @@ function PointsService.get(player: Player): number
 	return if points then points.Value else 0
 end
 
+-- Pontos ganhos na partida atual (pro ranking: gastar na loja não diminui)
+local earned: { [Player]: number } = setmetatable({}, { __mode = "k" }) :: any
+
 function PointsService.add(player: Player, amount: number)
 	local points = getStat(player, "Pontos")
 	if points then
 		points.Value += amount
 	end
+	if amount > 0 then
+		earned[player] = (earned[player] or 0) + amount
+	end
+end
+
+-- O que o jogador fez na partida atual (pro ranking)
+function PointsService.getMatchStats(player: Player): { Kills: number, Headshots: number, Points: number }
+	local kills, headshots = getStat(player, "Abates"), getStat(player, "Headshots")
+	return {
+		Kills = if kills then kills.Value else 0,
+		Headshots = if headshots then headshots.Value else 0,
+		Points = earned[player] or 0,
+	}
 end
 
 function PointsService.spend(player: Player, amount: number): boolean
@@ -82,6 +98,7 @@ function PointsService.addHeadshot(player: Player)
 end
 
 function PointsService.reset(player: Player)
+	earned[player] = 0
 	local points = getStat(player, "Pontos")
 	if points then
 		points.Value = Config.StartingPoints
