@@ -8,6 +8,7 @@
 --   AutoDoor       - folhas das portas automáticas (AutoDoorService)
 --   DummySpot      - lugar de um zumbi de treino (atributo Round = vida igual à dessa rodada)
 --   UpgradeMachine - Máquina de Upgrade grátis do Treinamento (ver MapKit.upgradeMachine)
+--   AuraPedestal   - pedestal da Galeria das Auras (atributo AuraRank; o AuraService põe o manequim)
 --   LobbySpawn     - onde os jogadores nascem
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -15,6 +16,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Config = require(ReplicatedStorage.Shared.Config)
 local Weapons = require(ReplicatedStorage.Shared.Weapons)
 local Premium = require(ReplicatedStorage.Shared.Premium)
+local Progression = require(ReplicatedStorage.Shared.Progression)
 local WeaponModels = require(ReplicatedStorage.Shared.WeaponModels)
 local MapKit = require(script.Parent.MapKit)
 
@@ -419,6 +421,38 @@ local function rankingBoard(parent: Instance, position: Vector3, facing: Vector3
 	light.Parent = board
 end
 
+-- Galeria das Auras (lado direito da praça): um pedestal por cargo, em fila, com o nome e os
+-- pontos que pede escritos na frente; o AuraService põe um manequim com a aura em cada um
+local GALLERY_X = 176
+
+local function auraGallery(parent: Instance)
+	local ranks = Progression.Ranks
+	local spacing = 11
+	local firstZ = -26
+	local lastZ = firstZ + (#ranks - 1) * spacing
+	local centerZ = (firstZ + lastZ) / 2
+	local length = lastZ - firstZ + 14
+
+	-- parede escura atrás (as auras aparecem melhor) e tapete vermelho na frente
+	box(parent, "GalleryWall", Vector3.new(1.5, 18, length), CFrame.new(GALLERY_X + 8, 9, centerZ), Color3.fromRGB(32, 24, 48))
+	box(parent, "GalleryTrim", Vector3.new(1.7, 0.5, length), CFrame.new(GALLERY_X + 8, 18.25, centerZ), COLOR.Yellow, Enum.Material.Neon)
+	box(parent, "GalleryCarpet", Vector3.new(8, 0.12, length), CFrame.new(GALLERY_X - 7, 0.06, centerZ), Color3.fromRGB(150, 25, 35), Enum.Material.Fabric)
+
+	local signPosition = Vector3.new(GALLERY_X + 7, 14.5, centerZ)
+	local sign = box(parent, "GallerySign", Vector3.new(46, 5, 0.4), CFrame.lookAt(signPosition, signPosition - Vector3.xAxis), Color3.fromRGB(20, 15, 30))
+	writeOn(sign, Enum.NormalId.Front, "GALERIA DAS AURAS\nJogue, ganhe pontos e suba de cargo: ele aparece em cima do seu nome e te dá a aura!", COLOR.Yellow, nil, 30)
+
+	for index, rank in ranks do
+		local position = Vector3.new(GALLERY_X, 0.75, firstZ + (index - 1) * spacing)
+		local pedestal = box(parent, "AuraPedestal", Vector3.new(5, 1.5, 5), CFrame.lookAt(position, position - Vector3.xAxis), Color3.fromRGB(45, 40, 55), Enum.Material.Marble)
+		pedestal:SetAttribute("AuraRank", index)
+		tag(pedestal, "AuraPedestal")
+		box(parent, "PedestalTrim", Vector3.new(5.1, 0.2, 5.1), pedestal.CFrame * CFrame.new(0, 0.75, 0), rank.Color, Enum.Material.Neon)
+		local requirement = if rank.Points == 0 then "todo mundo começa aqui" else `{Progression.format(rank.Points)} pontos`
+		writeOn(pedestal, Enum.NormalId.Front, `{index}. {string.upper(rank.Name)}\n{requirement}`, rank.Color, nil, 40)
+	end
+end
+
 local function buildPlaza(parent: Instance, maps: { MapInfo })
 	local width, depth = MAX_X - MIN_X, MAX_Z - MIN_Z
 	local centerX, centerZ = (MIN_X + MAX_X) / 2, (MIN_Z + MAX_Z) / 2
@@ -474,10 +508,12 @@ local function buildPlaza(parent: Instance, maps: { MapInfo })
 	local premiumPosition = Vector3.new(-35, 0, 66)
 	premiumStand(parent, premiumPosition, (Vector3.new(30, 0, 55) - premiumPosition).Unit)
 
+	auraGallery(parent)
+
 	-- placa de boas-vindas ao lado do spawn
 	local welcomePosition = Vector3.new(-10, 4, 48)
 	local welcome = box(parent, "WelcomeBoard", Vector3.new(14, 7, 0.4), CFrame.lookAt(welcomePosition, Vector3.new(30, 4, 55)), Color3.fromRGB(25, 25, 30))
-	writeOn(welcome, Enum.NormalId.Front, "PRA JOGAR: pare na porta de uma fase\n(Supermercado ou Estádio)\n\nTREINAMENTO (prédio à esquerda):\nteste todas as armas nos zumbis de treino\n\nARSENAL (atrás de você): libere armas com moedas", COLOR.White)
+	writeOn(welcome, Enum.NormalId.Front, "PRA JOGAR: pare na porta de uma fase\n(Supermercado ou Estádio)\n\nTREINAMENTO (prédio à esquerda):\nteste todas as armas nos zumbis de treino\n\nARSENAL (atrás de você): libere armas com moedas\n\nGALERIA DAS AURAS (lá na direita): veja os cargos", COLOR.White)
 	block(parent, "WelcomePost", Vector3.new(0.5, 1, 0.5), welcomePosition.X, welcomePosition.Z, COLOR.DarkMetal)
 
 	for _, position in { Vector2.new(85, 60), Vector2.new(85, -30), Vector2.new(-25, -70), Vector2.new(-25, 70), Vector2.new(30, 80), Vector2.new(90, -85) } do

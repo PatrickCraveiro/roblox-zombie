@@ -43,19 +43,50 @@ Placar: Abates, Headshots (abate com tiro na cabeça, +50 pontos de bônus) e Po
 ## Moedas e Arsenal (progresso salvo)
 
 Jogando você ganha **moedas** (salvas na nuvem): 1 por abate, 1 por headshot e 10 por rodada que a
-partida alcançou (`Config.CoinsPer...`). No lobby, a banca **Arsenal** (atrás do spawn) abre uma janela
-com todas as armas: dá pra **liberar pra sempre** com moedas e escolher com qual **começar a partida**
-(no lugar da pistola). Preço de cada arma: `CoinPrice` em `Weapons.luau`.
+partida alcançou (`Config.CoinsPer...`). Bônus, que se multiplicam:
+
+- **1ª partida do dia** (vira à meia-noite de Brasília): moedas x2
+- **Em grupo** (2 ou mais jogadores na partida): +20%
+- **Passe VIP Moedas em Dobro**: x2 sempre
+
+No fim da partida aparece quanto ganhou e quanto falta pra próxima arma; no lobby isso fica embaixo
+das moedas. A banca **Arsenal** (atrás do spawn) abre uma janela com todas as armas: dá pra
+**liberar pra sempre** com moedas e escolher com qual **começar a partida** (no lugar da pistola).
+Preço de cada arma: `CoinPrice` em `Weapons.luau`. A ideia é demorar: um jogador médio (~290 moedas
+por partida até a rodada 10, ~1.450 por hora) libera a primeira arma na primeira partida, mas leva
+umas 34 horas pra juntar o Micro-ondas e umas 90 pra liberar tudo.
 
 | Arma | Moedas | Arma | Moedas |
 |---|---|---|---|
-| Pistola | grátis | Metralhadora | 1500 |
-| Submetralhadora | 300 | Cano Duplo | 1800 |
-| Revólver | 400 | Fuzil de Batalha | 2200 |
-| Escopeta | 500 | Besta | 2600 |
-| Fuzil | 800 | Metralhadora Giratória | 3200 |
-| Rifle de Precisão | 1000 | Micro-ondas Portátil | 4000 |
-| Escopeta Automática | 1200 | Armas VIP | só com o passe |
+| Pistola | grátis | Metralhadora | 6.000 |
+| Submetralhadora | 100 | Cano Duplo | 9.000 |
+| Revólver | 300 | Fuzil de Batalha | 13.000 |
+| Escopeta | 700 | Besta | 18.000 |
+| Fuzil | 1.500 | Metralhadora Giratória | 25.000 |
+| Rifle de Precisão | 2.500 | Micro-ondas Portátil | 50.000 |
+| Escopeta Automática | 4.000 | Armas VIP | só com o passe |
+
+## Cargos de aura
+
+Os **pontos** de todas as partidas somados (gastar na loja não diminui) dão um cargo. O cargo aparece
+em cima do nome do jogador (no lugar do nome padrão) e ele ganha uma **aura** em volta do corpo. Quando
+sobe de cargo, aparece um aviso pra ele e pra todo mundo do servidor. No lobby, a **Galeria das Auras**
+(lado direito da praça) tem um manequim com cada aura e mostra quanto falta pra você chegar lá.
+
+| Cargo | Pontos | Aura |
+|---|---|---|
+| Iniciante | 0 | folhinhas voando em volta |
+| Café com Leite | 20.000 | poeirinha nos pés |
+| Espanta-Zumbi | 75.000 | bolhas verdes subindo |
+| Zé Bala | 200.000 | faíscas saindo do chão |
+| Mira Laser | 500.000 | bolas de luz azul em órbita |
+| Pesadelo dos Zumbis | 1.200.000 | fumaça roxa |
+| Raio Ambulante | 2.500.000 | raios amarelos em volta |
+| Lenda do Bairro | 5.000.000 | fogo azul e purpurina |
+| Matador | 10.000.000 | aura vermelha fortíssima (chamas + contorno vermelho) |
+
+Um jogador médio faz uns 17 mil pontos por partida (~85 mil por hora): Raio Ambulante em ~30 horas,
+Matador em ~120. Nomes e pontos: `src/shared/Progression.luau`; efeitos: `src/client/AuraController.luau`.
 
 Dados de cada jogador: `src/server/PlayerDataService.luau` (DataStore `PlayerData_v1`). No Studio
 precisa do mesmo acesso às APIs do ranking; sem ele o jogo funciona, mas não salva.
@@ -73,6 +104,10 @@ separado). São as armas mais fortes do jogo:
 | Metralhadora Dragão | 399 | 4000 pts | **2000 balas no pente**, 250 por tiro, tiros de fogo; o zumbi morto vira brasa |
 | Canhão Furacão | 499 | 5000 pts | vendaval em leque que mata tudo na frente e arremessa os zumbis longe |
 | **Arsenal Lendário** (pacote) | **999** | | as 5 armas |
+
+Fora das armas tem o passe **Moedas em Dobro** (149 Robux): dobra as moedas de toda partida. É
+vendido pelo botão dourado no topo da janela do Arsenal. No Studio (`StudioOwnsAll`) todo mundo tem
+ele, então as moedas vêm em dobro nos testes.
 
 - Ficam na **parede dourada** de cada fase: quem tem o passe compra com pontos; quem não tem vê a
   janela de compra do passe. Não saem na Caixa Surpresa.
@@ -125,7 +160,7 @@ o jogo usa ele em vez de gerar.
 
 ```
 src/
-  shared/      -> ReplicatedStorage.Shared (Config, Weapons, WeaponModels, Sounds, Ambience)
+  shared/      -> ReplicatedStorage.Shared (Config, Weapons, WeaponModels, Sounds, Ambience, Progression)
   server/      -> ServerScriptService.Server (partidas, lobby, zumbis, armas, pontos, portas, caixa)
     Maps/      -> geradores do lobby e das fases
   client/      -> StarterPlayerScripts.Client (HUD, armas em 1ª pessoa, efeitos)

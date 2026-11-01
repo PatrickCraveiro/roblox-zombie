@@ -1,5 +1,5 @@
--- Passes pagos (Game Pass) do jogo: um por arma VIP e o pacote "Arsenal Lendário" com todas
--- (mais barato que comprar separado).
+-- Passes pagos (Game Pass) do jogo: um por arma VIP, o pacote "Arsenal Lendário" com todas as
+-- armas (mais barato que comprar separado) e o "Moedas em Dobro".
 --
 -- Pra vender de verdade: crie cada passe no Creator Hub (create.roblox.com → seu jogo →
 -- Monetização → Passes), com imagem e o preço em Robux de "Robux" abaixo, e cole o número (ID)
@@ -63,6 +63,14 @@ Premium.Passes = {
 		Description = "Vendaval que mata tudo na frente e arremessa os zumbis",
 		Robux = 499,
 		Attribute = "PassHurricane",
+	},
+	-- não é arma: dobra as moedas de toda partida (fica fora do pacote de armas)
+	DoubleCoins = {
+		Id = 0,
+		Name = "Moedas em Dobro",
+		Description = "Ganhe o dobro de moedas em toda partida, pra sempre",
+		Robux = 149,
+		Attribute = "PassDoubleCoins",
 	},
 } :: { [string]: Pass }
 

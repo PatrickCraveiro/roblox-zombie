@@ -10,8 +10,10 @@ local Workspace = game:GetService("Workspace")
 
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Config = require(Shared:WaitForChild("Config"))
+local Progression = require(Shared:WaitForChild("Progression"))
 local Shop = require(Shared:WaitForChild("Shop"))
 local Sounds = require(Shared:WaitForChild("Sounds"))
+local Weapons = require(Shared:WaitForChild("Weapons"))
 
 local player = Players.LocalPlayer
 local Remotes = ReplicatedStorage:WaitForChild("Remotes")
@@ -36,6 +38,7 @@ local subtitleLabel: TextLabel
 local toastLabel: TextLabel
 local lobbyHintLabel: TextLabel
 local coinsLabel: TextLabel
+local progressLabel: TextLabel
 local portalLabel: TextLabel
 local damageOverlay: Frame
 local perksFrame: Frame
@@ -293,6 +296,17 @@ local function build()
 		TextColor3 = Color3.fromRGB(255, 200, 40),
 	}, gui)
 
+	-- embaixo das moedas: próxima arma do Arsenal e o cargo de aura
+	progressLabel = makeText({
+		Name = "Progress",
+		AnchorPoint = Vector2.new(0.5, 0),
+		Position = UDim2.new(0.5, 0, 0, 132),
+		Size = UDim2.fromOffset(800, 44),
+		TextSize = 18,
+		RichText = true,
+		TextColor3 = Color3.fromRGB(230, 230, 235),
+	}, gui)
+
 	-- Contagem do portal (aparece enquanto o jogador está em cima de um)
 	portalLabel = makeText({
 		Name = "Portal",
@@ -358,7 +372,7 @@ local function build()
 		Name = "Subtitle",
 		AnchorPoint = Vector2.new(0.5, 0.5),
 		Position = UDim2.new(0.5, 0, 0.3, 65),
-		Size = UDim2.fromOffset(900, 30),
+		Size = UDim2.fromOffset(900, 60),
 		TextSize = 24,
 		TextTransparency = 1,
 		ZIndex = 10,
@@ -485,6 +499,7 @@ local function applyMode()
 	pointsLabel.Visible = playing
 	lobbyHintLabel.Visible = not playing
 	coinsLabel.Visible = not playing
+	progressLabel.Visible = not playing
 
 	if not playing then
 		deathScreen.Visible = false
@@ -660,11 +675,29 @@ function HudController.init()
 	trackPerks()
 
 	player:GetAttributeChangedSignal("InMatch"):Connect(applyMode)
-	local function updateCoins()
-		coinsLabel.Text = `MOEDAS: {player:GetAttribute("Coins") or 0}`
+	local function updateProgress()
+		local coins = player:GetAttribute("Coins") or 0
+		coinsLabel.Text = `MOEDAS: {Progression.format(coins)}`
+
+		local nextId, price = Progression.nextWeapon(Progression.parseOwned(player:GetAttribute("OwnedWeapons")))
+		local weaponLine = if not nextId
+			then "Você liberou todas as armas do Arsenal!"
+			elseif coins >= price then `Já dá pra liberar: <b>{Weapons[nextId].Name}</b> (no Arsenal)`
+			else `Próxima arma: <b>{Weapons[nextId].Name}</b> (faltam {Progression.format(price - coins)} moedas)`
+
+		local points = player:GetAttribute("TotalPoints") or 0
+		local index = Progression.rankIndex(points)
+		local rank, nextRank = Progression.Ranks[index], Progression.Ranks[index + 1]
+		local nextText = if nextRank
+			then `  →  próximo: {nextRank.Name} (faltam {Progression.format(nextRank.Points - points)} pts)`
+			else "  (cargo máximo!)"
+		local rankLine = `Cargo: <font color="#{rank.Color:ToHex()}"><b>{rank.Name}</b></font>{nextText}`
+		progressLabel.Text = weaponLine .. "\n" .. rankLine
 	end
-	player:GetAttributeChangedSignal("Coins"):Connect(updateCoins)
-	updateCoins()
+	for _, attribute in { "Coins", "OwnedWeapons", "TotalPoints" } do
+		player:GetAttributeChangedSignal(attribute):Connect(updateProgress)
+	end
+	updateProgress()
 	applyMode()
 
 	local function updatePortal()
@@ -679,8 +712,8 @@ function HudController.init()
 		task.spawn(trackCharacter, player.Character)
 	end
 
-	Remotes:WaitForChild("Announce").OnClientEvent:Connect(function(title, subtitle)
-		announce(title, subtitle)
+	Remotes:WaitForChild("Announce").OnClientEvent:Connect(function(title, subtitle, duration)
+		announce(title, subtitle, if typeof(duration) == "number" then duration else nil)
 	end)
 	Remotes:WaitForChild("Notify").OnClientEvent:Connect(HudController.notify)
 

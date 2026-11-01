@@ -1,8 +1,10 @@
 -- Dados salvos de cada jogador (DataStore da Roblox): moedas, armas liberadas no Arsenal do
--- lobby e a arma escolhida pra começar a partida.
+-- lobby, a arma escolhida pra começar a partida, os pontos somados de todas as partidas (que dão
+-- o cargo de aura, ver Progression.luau) e o dia do último bônus diário.
 --
 -- O cliente lê pelos atributos do jogador:
---   Coins (número), OwnedWeapons (ids separados por vírgula), EquippedWeapon (id)
+--   Coins (número), OwnedWeapons (ids separados por vírgula), EquippedWeapon (id),
+--   TotalPoints (número) e Rank (índice do cargo em Progression.Ranks)
 -- e pede pra comprar/equipar pelo RemoteFunction "ArsenalAction".
 --
 -- Se o DataStore não responder (ex: Studio sem acesso às APIs), o jogador joga normal, mas o
@@ -13,6 +15,7 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Config = require(ReplicatedStorage.Shared.Config)
+local Progression = require(ReplicatedStorage.Shared.Progression)
 local Weapons = require(ReplicatedStorage.Shared.Weapons)
 local PremiumService = require(script.Parent.PremiumService)
 
@@ -26,7 +29,16 @@ type Profile = {
 	coins: number,
 	owned: { [string]: boolean },
 	equipped: string,
+	totalPoints: number, -- pontos ganhos em todas as partidas (não diminui gastando)
+	bonusDay: number, -- dia em que já ganhou o bônus da 1ª partida
 	canSave: boolean,
+}
+
+export type MatchReward = {
+	coins: number,
+	bonuses: { string }, -- bônus que entraram (pra mostrar pro jogador)
+	rankUp: number?, -- subiu pra esse cargo
+	nextHint: string?, -- "Faltam 50 moedas pra Escopeta"
 }
 
 local profiles: { [Player]: Profile } = {}
@@ -50,6 +62,17 @@ local function publish(player: Player, profile: Profile)
 	player:SetAttribute("Coins", profile.coins)
 	player:SetAttribute("OwnedWeapons", table.concat(owned, ","))
 	player:SetAttribute("EquippedWeapon", profile.equipped)
+	player:SetAttribute("TotalPoints", profile.totalPoints)
+	player:SetAttribute("Rank", Progression.rankIndex(profile.totalPoints))
+end
+
+-- Número do dia no horário de Brasília (o bônus diário vira à meia-noite daqui)
+local function today(): number
+	return math.floor((os.time() - 3 * 3600) / 86400)
+end
+
+local function readNumber(data: any, key: string): number
+	return if typeof(data) == "table" and typeof(data[key]) == "number" then data[key] else 0
 end
 
 local function save(player: Player)
@@ -62,7 +85,13 @@ local function save(player: Player)
 	for id in profile.owned do
 		table.insert(owned, id)
 	end
-	local data = { coins = profile.coins, owned = owned, equipped = profile.equipped }
+	local data = {
+		coins = profile.coins,
+		owned = owned,
+		equipped = profile.equipped,
+		totalPoints = profile.totalPoints,
+		bonusDay = profile.bonusDay,
+	}
 	local ok, err = pcall(function()
 		(dataStore :: DataStore):SetAsync(tostring(player.UserId), data)
 	end)
@@ -86,9 +115,11 @@ local function load(player: Player)
 	end
 
 	local profile: Profile = {
-		coins = if typeof(data) == "table" and typeof(data.coins) == "number" then data.coins else 0,
+		coins = readNumber(data, "coins"),
 		owned = { [Config.StartingWeapon] = true },
 		equipped = Config.StartingWeapon,
+		totalPoints = readNumber(data, "totalPoints"),
+		bonusDay = readNumber(data, "bonusDay"),
 		canSave = canSave,
 	}
 	if typeof(data) == "table" then
@@ -119,8 +150,15 @@ local function canEquip(player: Player, profile: Profile, weaponId: string): boo
 	return profile.owned[weaponId] == true
 end
 
--- Pedidos do Arsenal (cliente): "buy" (liberar com moedas), "equip" (arma inicial), "vip" (loja do passe)
+-- Pedidos do Arsenal (cliente): "buy" (liberar com moedas), "equip" (arma inicial), "vip" (loja do
+-- passe da arma) e "pass" (loja de um passe que não é arma, ex: "DoubleCoins")
 local function onArsenalAction(player: Player, action: any, weaponId: any): (boolean, string)
+	if action == "pass" then
+		if typeof(weaponId) == "string" then
+			PremiumService.prompt(player, weaponId)
+		end
+		return true, ""
+	end
 	local profile = profiles[player]
 	local def = if typeof(weaponId) == "string" then Weapons[weaponId] else nil
 	if not profile or not def then
@@ -174,15 +212,54 @@ function PlayerDataService.getStartingWeapon(player: Player): string
 	return Config.StartingWeapon
 end
 
--- Moedas ganhas no fim da partida
-function PlayerDataService.addCoins(player: Player, amount: number)
+-- Fim da partida: dá as moedas (com os bônus) e soma os pontos pro cargo de aura
+function PlayerDataService.finishMatch(player: Player, baseCoins: number, points: number, inGroup: boolean): MatchReward?
 	local profile = profiles[player]
-	if not profile or amount <= 0 then
-		return
+	if not profile then
+		return nil
 	end
-	profile.coins += math.floor(amount)
+
+	local coins = baseCoins
+	local bonuses = {}
+	if baseCoins > 0 then
+		if profile.bonusDay ~= today() then
+			profile.bonusDay = today()
+			coins *= Config.DailyBonusMultiplier
+			table.insert(bonuses, `1ª partida do dia x{Config.DailyBonusMultiplier}`)
+		end
+		if PremiumService.owns(player, "DoubleCoins") then
+			coins *= Config.DoubleCoinsMultiplier
+			table.insert(bonuses, `VIP x{Config.DoubleCoinsMultiplier}`)
+		end
+		if inGroup then
+			coins *= Config.GroupBonusMultiplier
+			table.insert(bonuses, `em grupo +{math.floor((Config.GroupBonusMultiplier - 1) * 100 + 0.5)}%`)
+		end
+	end
+	coins = math.floor(coins)
+
+	local oldRank = Progression.rankIndex(profile.totalPoints)
+	profile.coins += coins
+	profile.totalPoints += math.max(math.floor(points), 0)
+	local newRank = Progression.rankIndex(profile.totalPoints)
 	publish(player, profile)
 	task.spawn(save, player)
+
+	local hint = nil
+	local nextId, price = Progression.nextWeapon(profile.owned)
+	if nextId then
+		local name = Weapons[nextId].Name
+		hint = if profile.coins >= price
+			then `Já dá pra liberar: {name}!`
+			else `Faltam {Progression.format(price - profile.coins)} moedas pra {name}`
+	end
+
+	return {
+		coins = coins,
+		bonuses = bonuses,
+		rankUp = if newRank > oldRank then newRank else nil,
+		nextHint = hint,
+	}
 end
 
 function PlayerDataService.init()

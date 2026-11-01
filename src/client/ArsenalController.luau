@@ -12,6 +12,7 @@ local UserInputService = game:GetService("UserInputService")
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Config = require(Shared:WaitForChild("Config"))
 local Premium = require(Shared:WaitForChild("Premium"))
+local Progression = require(Shared:WaitForChild("Progression"))
 local WeaponModels = require(Shared:WaitForChild("WeaponModels"))
 local Weapons = require(Shared:WaitForChild("Weapons"))
 
@@ -29,6 +30,7 @@ local GRAY = Color3.fromRGB(90, 90, 95)
 local gui: ScreenGui
 local grid: ScrollingFrame
 local coinsLabel: TextLabel
+local doubleCoinsButton: TextButton
 local messageLabel: TextLabel
 local openedAt: BasePart? = nil
 local cards: { [string]: { status: TextLabel, button: TextButton, stroke: UIStroke } } = {}
@@ -84,7 +86,15 @@ local function refresh()
 		return
 	end
 	local coins = player:GetAttribute("Coins") or 0
-	coinsLabel.Text = `MOEDAS: {coins}`
+	coinsLabel.Text = `MOEDAS: {Progression.format(coins)}`
+	local doubleCoins = Premium.Passes.DoubleCoins
+	if ownsPass("DoubleCoins") then
+		doubleCoinsButton.Text = "★ MOEDAS x2 ATIVO"
+		doubleCoinsButton.BackgroundColor3 = GREEN
+	else
+		doubleCoinsButton.Text = `★ MOEDAS EM DOBRO • {doubleCoins.Robux} Robux`
+		doubleCoinsButton.BackgroundColor3 = GOLD
+	end
 	local equipped = player:GetAttribute("EquippedWeapon") or Config.StartingWeapon
 	for id, card in cards do
 		local def = Weapons[id]
@@ -107,7 +117,7 @@ local function refresh()
 			card.stroke.Color = GOLD
 		else
 			local price = def.CoinPrice or 0
-			card.status.Text = `{price} moedas`
+			card.status.Text = `{Progression.format(price)} moedas`
 			card.button.Text = "LIBERAR"
 			card.button.BackgroundColor3 = if coins >= price then GREEN:Lerp(BLUE, 0.3) else GRAY
 			card.stroke.Color = Color3.fromRGB(70, 70, 80)
@@ -206,8 +216,26 @@ local function build()
 		TextSize = 15,
 		TextXAlignment = Enum.TextXAlignment.Left,
 		TextColor3 = Color3.fromRGB(190, 190, 200),
-		Text = "Ganhe moedas jogando (abates, headshots e rodadas). A arma EQUIPADA é a que você leva pra partida.",
+		Text = "1ª partida do dia vale x2 • em grupo +20% • a arma EQUIPADA é a que vai pra partida",
 	}, panel)
+
+	-- passe VIP que dobra as moedas
+	doubleCoinsButton = make("TextButton", {
+		Position = UDim2.fromOffset(170, 16),
+		Size = UDim2.fromOffset(250, 32),
+		BackgroundColor3 = GOLD,
+		Font = Enum.Font.GothamBlack,
+		TextSize = 15,
+		TextColor3 = Color3.fromRGB(30, 25, 10),
+	}, panel)
+	make("UICorner", { CornerRadius = UDim.new(0, 8) }, doubleCoinsButton)
+	doubleCoinsButton.Activated:Connect(function()
+		if not ownsPass("DoubleCoins") then
+			pcall(function()
+				Remotes:WaitForChild("ArsenalAction"):InvokeServer("pass", "DoubleCoins")
+			end)
+		end
+	end)
 
 	-- fechar (Modal solta o mouse da primeira pessoa enquanto a janela está aberta)
 	local close = make("TextButton", {

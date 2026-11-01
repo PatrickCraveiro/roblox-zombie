@@ -24,6 +24,11 @@ Config.UpgradeAmmoMultiplier = 2 -- pente e munição reserva
 Config.CoinsPerKill = 1
 Config.CoinsPerHeadshot = 1
 Config.CoinsPerRound = 10 -- por rodada que a partida alcançou
+-- Bônus (multiplicam juntos): a 1ª partida do dia (horário de Brasília) vale em dobro, jogar
+-- com mais alguém na partida dá +20% e o passe VIP "Moedas em Dobro" dobra sempre
+Config.DailyBonusMultiplier = 2
+Config.GroupBonusMultiplier = 1.2
+Config.DoubleCoinsMultiplier = 2
 
 -- Melhorias da loja (itens e preços em Shop.luau)
 Config.ArmorHealthMultiplier = 2 -- Colete Blindado: vida máxima x2

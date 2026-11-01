@@ -9,6 +9,7 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Config = require(ReplicatedStorage.Shared.Config)
+local Progression = require(ReplicatedStorage.Shared.Progression)
 local BarricadeService = require(script.Parent.BarricadeService)
 local BoxService = require(script.Parent.BoxService)
 local DoorService = require(script.Parent.DoorService)
@@ -29,6 +30,7 @@ local LOBBY_RESPAWN_DELAY = 3
 local gameState = "Lobby"
 local currentMap: string? = nil
 local matchPlayers: { [Player]: boolean } = {}
+local matchPeak = 0 -- máximo de jogadores juntos nessa partida (bônus de grupo nas moedas)
 local matchToken = 0 -- muda quando a partida acaba, pra parar os loops antigos
 
 local function setState(state: string)
@@ -100,6 +102,7 @@ end
 
 local function addToMatch(player: Player)
 	matchPlayers[player] = true
+	matchPeak = math.max(matchPeak, countPlayers())
 	player:SetAttribute("InMatch", true)
 	-- começa do zero (e sem as armas grátis do Treinamento)
 	PointsService.reset(player)
@@ -146,15 +149,34 @@ local function runRound(round: number, token: number): boolean
 	return survived
 end
 
--- O que o jogador fez na partida vai pro ranking e vira moedas (abates, headshots e rodadas)
+-- O que o jogador fez na partida vai pro ranking, vira moedas (abates, headshots e rodadas) e os
+-- pontos somam pro cargo de aura
 local function finishPlayerMatch(player: Player)
 	local stats = PointsService.getMatchStats(player)
 	RankingService.recordMatch(player, stats)
 	local round = ReplicatedStorage:GetAttribute("Round") or 0
 	local coins = stats.Kills * Config.CoinsPerKill + stats.Headshots * Config.CoinsPerHeadshot + round * Config.CoinsPerRound
-	if coins > 0 then
-		PlayerDataService.addCoins(player, coins)
-		Remotes.Announce:FireClient(player, `+{coins} MOEDAS`, "Gaste no Arsenal do lobby pra liberar armas")
+	local reward = PlayerDataService.finishMatch(player, coins, stats.Points, matchPeak >= 2)
+	if not reward or not player.Parent then
+		return
+	end
+
+	if reward.coins > 0 then
+		local lines = {}
+		if #reward.bonuses > 0 then
+			table.insert(lines, "Bônus: " .. table.concat(reward.bonuses, "  •  "))
+		end
+		table.insert(lines, reward.nextHint or "Gaste no Arsenal do lobby pra liberar armas")
+		Remotes.Announce:FireClient(player, `+{Progression.format(reward.coins)} MOEDAS`, table.concat(lines, "\n"), 5)
+	end
+	if reward.rankUp then
+		local rank = Progression.Ranks[reward.rankUp]
+		task.delay(5.5, function()
+			if player.Parent then
+				Remotes.Announce:FireClient(player, `NOVO CARGO: {string.upper(rank.Name)}!`, `Aura nova: {rank.Description}`, 5)
+			end
+		end)
+		Remotes.Notify:FireAllClients(`{player.DisplayName} agora é {rank.Name}!`)
 	end
 end
 
@@ -173,6 +195,7 @@ local function endMatch()
 			task.spawn(spawnInLobby, player)
 		end
 	end
+	matchPeak = 0
 
 	MapService.deactivate()
 	currentMap = nil

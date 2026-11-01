@@ -95,10 +95,13 @@ function PremiumService.init()
 		if not purchased then
 			return
 		end
-		for _, pass in Premium.Passes do
+		for key, pass in Premium.Passes do
 			if pass.Id == passId then
 				grant(player, pass)
-				Remotes.Announce:FireClient(player, `{string.upper(pass.Name)} DESBLOQUEADO!`, "Obrigado pelo apoio! Procure a parede dourada nas fases")
+				local thanks = if key == "DoubleCoins"
+					then "Obrigado pelo apoio! Agora toda partida dá o dobro de moedas"
+					else "Obrigado pelo apoio! Procure a parede dourada nas fases"
+				Remotes.Announce:FireClient(player, `{string.upper(pass.Name)} DESBLOQUEADO!`, thanks)
 			end
 		end
 	end)
