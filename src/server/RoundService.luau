@@ -14,6 +14,7 @@ local BoxService = require(script.Parent.BoxService)
 local DoorService = require(script.Parent.DoorService)
 local MapService = require(script.Parent.MapService)
 local PointsService = require(script.Parent.PointsService)
+local PlayerDataService = require(script.Parent.PlayerDataService)
 local RankingService = require(script.Parent.RankingService)
 local ShopService = require(script.Parent.ShopService)
 local WeaponService = require(script.Parent.WeaponService)
@@ -145,6 +146,18 @@ local function runRound(round: number, token: number): boolean
 	return survived
 end
 
+-- O que o jogador fez na partida vai pro ranking e vira moedas (abates, headshots e rodadas)
+local function finishPlayerMatch(player: Player)
+	local stats = PointsService.getMatchStats(player)
+	RankingService.recordMatch(player, stats)
+	local round = ReplicatedStorage:GetAttribute("Round") or 0
+	local coins = stats.Kills * Config.CoinsPerKill + stats.Headshots * Config.CoinsPerHeadshot + round * Config.CoinsPerRound
+	if coins > 0 then
+		PlayerDataService.addCoins(player, coins)
+		Remotes.Announce:FireClient(player, `+{coins} MOEDAS`, "Gaste no Arsenal do lobby pra liberar armas")
+	end
+end
+
 local function endMatch()
 	matchToken += 1
 	ZombieService.clear()
@@ -153,7 +166,7 @@ local function endMatch()
 	local players = matchPlayers
 	matchPlayers = {}
 	for player in players do
-		RankingService.recordMatch(player, PointsService.getMatchStats(player))
+		finishPlayerMatch(player)
 		player:SetAttribute("InMatch", false)
 		ShopService.resetPlayer(player)
 		if player.Parent then
@@ -297,7 +310,7 @@ function RoundService.init()
 	Players.PlayerRemoving:Connect(function(player)
 		if matchPlayers[player] then
 			-- saiu no meio da partida: o que ele fez até ali entra no ranking
-			RankingService.recordMatch(player, PointsService.getMatchStats(player))
+			finishPlayerMatch(player)
 			matchPlayers[player] = nil
 			-- todo mundo da partida saiu do jogo: encerra
 			if currentMap and next(matchPlayers) == nil then

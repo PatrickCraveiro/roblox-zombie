@@ -21,7 +21,8 @@
         "Gore": { "$className": "RemoteEvent" },
         "DamageNumber": { "$className": "RemoteEvent" },
         "HitDirection": { "$className": "RemoteEvent" },
-        "RepairBarricade": { "$className": "RemoteEvent" }
+        "RepairBarricade": { "$className": "RemoteEvent" },
+        "ArsenalAction": { "$className": "RemoteFunction" }
       }
     },
 

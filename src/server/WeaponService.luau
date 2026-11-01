@@ -11,6 +11,7 @@ local Weapons = require(ReplicatedStorage.Shared.Weapons)
 local WeaponModels = require(ReplicatedStorage.Shared.WeaponModels)
 local WeaponStats = require(ReplicatedStorage.Shared.WeaponStats)
 local PointsService = require(script.Parent.PointsService)
+local PlayerDataService = require(script.Parent.PlayerDataService)
 local ZombieService = require(script.Parent.ZombieService)
 
 local Remotes = ReplicatedStorage.Remotes
@@ -81,7 +82,7 @@ local function resetInventory(player: Player)
 		cancelReload(old)
 	end
 	inventories[player] = {
-		slots = { newSlot(Config.StartingWeapon) },
+		slots = { newSlot(PlayerDataService.getStartingWeapon(player)) }, -- a escolhida no Arsenal (ou a pistola)
 		equipped = 1,
 		reloading = false,
 		reloadToken = 0,

@@ -40,15 +40,38 @@ Quiosques espalhados pelo mapa (itens e preços em `src/shared/Shop.luau`, efeit
 As melhorias aparecem como selos coloridos no canto da tela e somem quando você cai.
 Placar: Abates, Headshots (abate com tiro na cabeça, +50 pontos de bônus) e Pontos.
 
+## Moedas e Arsenal (progresso salvo)
+
+Jogando você ganha **moedas** (salvas na nuvem): 1 por abate, 1 por headshot e 10 por rodada que a
+partida alcançou (`Config.CoinsPer...`). No lobby, a banca **Arsenal** (atrás do spawn) abre uma janela
+com todas as armas: dá pra **liberar pra sempre** com moedas e escolher com qual **começar a partida**
+(no lugar da pistola). Preço de cada arma: `CoinPrice` em `Weapons.luau`.
+
+| Arma | Moedas | Arma | Moedas |
+|---|---|---|---|
+| Pistola | grátis | Metralhadora | 1500 |
+| Submetralhadora | 300 | Cano Duplo | 1800 |
+| Revólver | 400 | Fuzil de Batalha | 2200 |
+| Escopeta | 500 | Besta | 2600 |
+| Fuzil | 800 | Metralhadora Giratória | 3200 |
+| Rifle de Precisão | 1000 | Micro-ondas Portátil | 4000 |
+| Escopeta Automática | 1200 | Armas VIP | só com o passe |
+
+Dados de cada jogador: `src/server/PlayerDataService.luau` (DataStore `PlayerData_v1`). No Studio
+precisa do mesmo acesso às APIs do ranking; sem ele o jogo funciona, mas não salva.
+
 ## Premium: Arsenal Lendário (Game Pass)
 
 Passe pago com 3 armas exclusivas, mais fortes e com mais munição que as melhores da parede:
 
 | Arma | Preço na parede | Efeito |
 |---|---|---|
-| Canhão de Confete | 2500 pts | escopeta de 10 projéteis; o zumbi morto explode em confete |
-| Raio Congelante | 3000 pts | automática; cada tiro congela o zumbi (para de andar e de bater) |
-| Corrente Elétrica | 3500 pts | o raio pula pra até 3 zumbis por perto |
+| Canhão de Confete | 2500 pts | 10 projéteis de 140 que atravessam 3 zumbis; o zumbi morto explode em confete |
+| Raio Congelante | 3000 pts | automática, 160 por tiro, pente de 100; cada tiro congela o zumbi por 2s |
+| Corrente Elétrica | 3500 pts | 600 de dano e o raio pula pra até 5 zumbis por perto |
+
+São as armas mais fortes do jogo (mais que as da Caixa Surpresa). Quem tem o passe também pode
+escolher uma delas como arma inicial no Arsenal.
 
 - Ficam na **parede dourada** de cada fase: quem tem o passe compra com pontos; quem não tem vê a
   janela de compra do passe. Não saem na Caixa Surpresa.

@@ -19,6 +19,12 @@ Config.UpgradePrice = 5000
 Config.UpgradeDamageMultiplier = 2
 Config.UpgradeAmmoMultiplier = 2 -- pente e munição reserva
 
+-- Moedas: ganhas jogando (salvas pra sempre), gastas no Arsenal do lobby pra liberar armas e
+-- escolher com qual começar a partida (preço de cada arma: CoinPrice em Weapons.luau)
+Config.CoinsPerKill = 1
+Config.CoinsPerHeadshot = 1
+Config.CoinsPerRound = 10 -- por rodada que a partida alcançou
+
 -- Melhorias da loja (itens e preços em Shop.luau)
 Config.ArmorHealthMultiplier = 2 -- Colete Blindado: vida máxima x2
 Config.FastHandsReloadMultiplier = 0.5 -- Mão Rápida: recarga leva metade do tempo

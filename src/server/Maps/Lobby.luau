@@ -329,6 +329,41 @@ local function premiumStand(parent: Instance, position: Vector3, facing: Vector3
 	end
 end
 
+-- Banca do Arsenal: abre a janela de armas compradas com moedas (o cliente abre quando o
+-- botão "OpenArsenal" é apertado)
+local function arsenalKiosk(parent: Instance, position: Vector3, facing: Vector3)
+	local base = CFrame.lookAt(position, position + facing)
+	local green = Color3.fromRGB(40, 160, 80)
+	local counter = box(parent, "ArsenalCounter", Vector3.new(12, 3.4, 3), base * CFrame.new(0, 1.7, 0), Color3.fromRGB(45, 50, 45), Enum.Material.Metal)
+	box(parent, "ArsenalTrim", Vector3.new(12.1, 0.3, 3.1), base * CFrame.new(0, 3.35, 0), green, Enum.Material.Neon)
+	local prompt = Instance.new("ProximityPrompt")
+	prompt.Name = "OpenArsenal"
+	prompt.ActionText = "Abrir Arsenal"
+	prompt.ObjectText = "Armas com moedas"
+	prompt.MaxActivationDistance = 10
+	prompt.RequiresLineOfSight = false
+	prompt.Parent = counter
+
+	for _, x in { -5.6, 5.6 } do
+		box(parent, "ArsenalPost", Vector3.new(0.4, 6.5, 0.4), base * CFrame.new(x, 6.65, 1.3), Color3.fromRGB(45, 50, 45), Enum.Material.Metal)
+	end
+	local sign = box(parent, "ArsenalSign", Vector3.new(12, 3.4, 0.4), base * CFrame.new(0, 9.3, 1.3), Color3.fromRGB(15, 30, 20))
+	writeOn(sign, Enum.NormalId.Front, "ARSENAL\nLibere armas com as moedas que você ganha jogando\ne escolha com qual começar a partida", Color3.fromRGB(120, 255, 150), nil, 40)
+	local light = Instance.new("PointLight")
+	light.Color = green
+	light.Range = 14
+	light.Brightness = 1.2
+	light.Parent = sign
+
+	-- umas armas de amostra no balcão
+	for index, id in { "SMG", "Shotgun", "Sniper" } do
+		local model = WeaponModels.build(id, true)
+		model:ScaleTo(1.8)
+		model:PivotTo(base * CFrame.new((index - 2) * 3.8, 4.1, 0) * CFrame.Angles(0, math.rad(90), 0))
+		model.Parent = parent
+	end
+end
+
 -- Quadro do ranking (o RankingService preenche as listas "List_<Best|Total>_<stat>" e o "Status")
 local function rankingBoard(parent: Instance, position: Vector3, facing: Vector3)
 	local width, height = 34, 15
@@ -428,6 +463,10 @@ local function buildPlaza(parent: Instance, maps: { MapInfo })
 	local rankingPosition = Vector3.new(78, 0, 52)
 	rankingBoard(parent, rankingPosition, (Vector3.new(30, 0, 55) - rankingPosition).Unit)
 
+	-- banca do Arsenal (armas com moedas), à direita e um pouco atrás de quem nasce
+	local arsenalPosition = Vector3.new(48, 0, 76)
+	arsenalKiosk(parent, arsenalPosition, (Vector3.new(30, 0, 55) - arsenalPosition).Unit)
+
 	-- vitrine do Arsenal Lendário (premium), à esquerda de quem nasce
 	local premiumPosition = Vector3.new(-35, 0, 66)
 	premiumStand(parent, premiumPosition, (Vector3.new(30, 0, 55) - premiumPosition).Unit)
@@ -435,7 +474,7 @@ local function buildPlaza(parent: Instance, maps: { MapInfo })
 	-- placa de boas-vindas ao lado do spawn
 	local welcomePosition = Vector3.new(-10, 4, 48)
 	local welcome = box(parent, "WelcomeBoard", Vector3.new(14, 7, 0.4), CFrame.lookAt(welcomePosition, Vector3.new(30, 4, 55)), Color3.fromRGB(25, 25, 30))
-	writeOn(welcome, Enum.NormalId.Front, "PRA JOGAR: pare na porta de uma fase\n(Supermercado ou Estádio)\n\nTREINAMENTO (prédio à esquerda):\nteste todas as armas nos zumbis de treino", COLOR.White)
+	writeOn(welcome, Enum.NormalId.Front, "PRA JOGAR: pare na porta de uma fase\n(Supermercado ou Estádio)\n\nTREINAMENTO (prédio à esquerda):\nteste todas as armas nos zumbis de treino\n\nARSENAL (atrás de você): libere armas com moedas", COLOR.White)
 	block(parent, "WelcomePost", Vector3.new(0.5, 1, 0.5), welcomePosition.X, welcomePosition.Z, COLOR.DarkMetal)
 
 	for _, position in { Vector2.new(85, 60), Vector2.new(85, -30), Vector2.new(-25, -70), Vector2.new(-25, 70), Vector2.new(30, 80), Vector2.new(90, -85) } do

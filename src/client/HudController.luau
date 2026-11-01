@@ -35,6 +35,7 @@ local titleLabel: TextLabel
 local subtitleLabel: TextLabel
 local toastLabel: TextLabel
 local lobbyHintLabel: TextLabel
+local coinsLabel: TextLabel
 local portalLabel: TextLabel
 local damageOverlay: Frame
 local perksFrame: Frame
@@ -281,6 +282,17 @@ local function build()
 		Text = "LOBBY  •  Pare na porta de uma fase pra jogar  •  Treinamento no prédio à esquerda",
 	}, gui)
 
+	-- moedas (ganhas jogando, gastas no Arsenal do lobby)
+	coinsLabel = makeText({
+		Name = "Coins",
+		AnchorPoint = Vector2.new(0.5, 0),
+		Position = UDim2.new(0.5, 0, 0, 100),
+		Size = UDim2.fromOffset(400, 30),
+		TextSize = 24,
+		Font = Enum.Font.GothamBlack,
+		TextColor3 = Color3.fromRGB(255, 200, 40),
+	}, gui)
+
 	-- Contagem do portal (aparece enquanto o jogador está em cima de um)
 	portalLabel = makeText({
 		Name = "Portal",
@@ -472,6 +484,7 @@ local function applyMode()
 	remainingLabel.Visible = playing
 	pointsLabel.Visible = playing
 	lobbyHintLabel.Visible = not playing
+	coinsLabel.Visible = not playing
 
 	if not playing then
 		deathScreen.Visible = false
@@ -647,6 +660,11 @@ function HudController.init()
 	trackPerks()
 
 	player:GetAttributeChangedSignal("InMatch"):Connect(applyMode)
+	local function updateCoins()
+		coinsLabel.Text = `MOEDAS: {player:GetAttribute("Coins") or 0}`
+	end
+	player:GetAttributeChangedSignal("Coins"):Connect(updateCoins)
+	updateCoins()
 	applyMode()
 
 	local function updatePortal()

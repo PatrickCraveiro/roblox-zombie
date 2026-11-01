@@ -238,7 +238,7 @@ end
 
 local function fire()
 	local slot, def = currentSlot(), currentDef()
-	if not slot or not def or not isAlive() then
+	if not slot or not def or not isAlive() or player:GetAttribute("UiOpen") then -- (janela do Arsenal aberta)
 		return
 	end
 	local now = os.clock()
