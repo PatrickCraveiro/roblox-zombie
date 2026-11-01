@@ -5,9 +5,11 @@
 local CollectionService = game:GetService("CollectionService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
+local Premium = require(ReplicatedStorage.Shared.Premium)
 local Weapons = require(ReplicatedStorage.Shared.Weapons)
 local WeaponModels = require(ReplicatedStorage.Shared.WeaponModels)
 local PointsService = require(script.Parent.PointsService)
+local PremiumService = require(script.Parent.PremiumService)
 local WeaponService = require(script.Parent.WeaponService)
 
 local Remotes = ReplicatedStorage.Remotes
@@ -17,8 +19,8 @@ local WallBuyService = {}
 local LABEL_HEIGHT = 0.28 -- faixa do nome/preço (fração da altura da placa)
 local FRAME_COLOR = Color3.fromRGB(255, 200, 40)
 
--- Moldura amarela e a faixa de baixo com nome e preço
-local function createLabel(part: BasePart, title: string, price: number)
+-- Moldura amarela e a faixa de baixo com nome e preço (arma premium ganha a estrelinha)
+local function createLabel(part: BasePart, title: string, price: number, premium: boolean)
 	local gui = Instance.new("SurfaceGui")
 	gui.Face = Enum.NormalId.Front
 	gui.SizingMode = Enum.SurfaceGuiSizingMode.PixelsPerStud
@@ -47,7 +49,7 @@ local function createLabel(part: BasePart, title: string, price: number)
 	label.TextColor3 = Color3.fromRGB(240, 240, 230)
 	label.RichText = true
 	local priceText = if price == 0 then "GRÁTIS" else `{price} pts`
-	label.Text = `{string.upper(title)}  <font color="#FFC828">{priceText}</font>`
+	label.Text = `{if premium then "★ " else ""}{string.upper(title)}  <font color="#FFC828">{priceText}</font>`
 	label.Parent = gui
 
 	local padding = Instance.new("UIPadding")
@@ -101,17 +103,27 @@ local function setupWallBuy(instance: Instance)
 	local price = instance:GetAttribute("Price") or def.Price
 	local ammoPrice = math.floor(price / 2)
 
-	createLabel(instance, def.Name, price)
+	createLabel(instance, def.Name, price, def.Pass ~= nil)
 	mountWeapon(instance, weaponId)
+
+	-- arma premium na parede (com preço): só compra quem tem o passe
+	local passName = if def.Pass and price > 0 and Premium.Passes[def.Pass] then Premium.Passes[def.Pass].Name else nil
 
 	local prompt = Instance.new("ProximityPrompt")
 	prompt.ActionText = (if price == 0 then "Pegar " else "Comprar ") .. def.Name
-	prompt.ObjectText = if price == 0 then "Grátis" else string.format("%d pts  |  munição: %d pts", price, ammoPrice)
+	prompt.ObjectText = if price == 0
+		then (if def.Pass then "Grátis pra testar (premium)" else "Grátis")
+		elseif passName then string.format("%d pts  |  ★ %s", price, passName)
+		else string.format("%d pts  |  munição: %d pts", price, ammoPrice)
 	prompt.MaxActivationDistance = 8
 	prompt.RequiresLineOfSight = false
 	prompt.Parent = instance
 
 	prompt.Triggered:Connect(function(player)
+		if passName and not PremiumService.owns(player, def.Pass :: string) then
+			PremiumService.prompt(player, def.Pass :: string) -- mostra a loja do passe
+			return
+		end
 		local owned = WeaponService.findSlot(player, weaponId) ~= nil
 		local cost = if owned then ammoPrice else price
 		if PointsService.spend(player, cost) then

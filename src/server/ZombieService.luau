@@ -81,6 +81,8 @@ type ZombieState = {
 	isDummy: boolean, -- boneco de teste do lobby: parado, não conta na rodada nem dá pontos
 	onRemoved: (() -> ())?,
 	nextGroanAt: number,
+	frozenUntil: number?, -- Raio Congelante: parado até esse momento
+	frozenColors: { [BasePart]: Color3 }?, -- cores de antes do gelo (pra voltar)
 }
 
 local zombiesFolder: Folder
@@ -98,6 +100,11 @@ ZombieService.Died = Instance.new("BindableEvent")
 
 local function flatDistance(a: Vector3, b: Vector3): number
 	return Vector2.new(a.X - b.X, a.Z - b.Z).Magnitude
+end
+
+-- Congelado pelo Raio Congelante? (fica parado: não anda, não bate, não arranca tábua)
+local function isFrozen(state: ZombieState): boolean
+	return state.frozenUntil ~= nil and os.clock() < state.frozenUntil
 end
 
 local function loadTracks(humanoid: Humanoid): { [string]: AnimationTrack }
@@ -120,6 +127,9 @@ end
 
 -- Toca a animação certa pra velocidade atual (andando ou parado)
 local function playMovement(state: ZombieState)
+	if isFrozen(state) then
+		return -- congelado: a animação fica parada
+	end
 	local moving = state.lastSpeed > 0.5
 	local track = if moving then state.moveTrack else state.idleTrack
 	if state.currentTrack ~= track then
@@ -423,6 +433,9 @@ local function hurtPlayer(target: Target, amount: number, from: Vector3)
 end
 
 local function tryAttack(state: ZombieState, target: Target)
+	if isFrozen(state) then
+		return
+	end
 	local now = os.clock()
 	if now - state.lastAttack < Config.ZombieAttackCooldown then
 		return
@@ -435,11 +448,55 @@ local function tryAttack(state: ZombieState, target: Target)
 
 	-- o dano sai um pouco depois do início do golpe: dá pra desviar
 	task.delay(0.3, function()
-		if state.humanoid.Health <= 0 or target.humanoid.Health <= 0 then
+		if state.humanoid.Health <= 0 or target.humanoid.Health <= 0 or isFrozen(state) then
 			return
 		end
 		if (target.root.Position - state.root.Position).Magnitude <= Config.ZombieAttackRange + 1.5 then
 			hurtPlayer(target, Config.ZombieDamage, state.root.Position)
+		end
+	end)
+end
+
+local ICE_COLOR = Color3.fromRGB(150, 220, 255)
+
+local function unfreeze(state: ZombieState)
+	if not state.frozenColors then
+		return
+	end
+	for part, color in state.frozenColors do
+		part.Color = color
+	end
+	state.frozenColors = nil
+	for _, track in state.tracks do
+		track:AdjustSpeed(1)
+	end
+	playMovement(state)
+end
+
+-- Raio Congelante: o zumbi fica azul de gelo e parado (não anda, não bate, não arranca tábua)
+function ZombieService.freeze(model: Model, seconds: number)
+	local state = active[model]
+	if not state or state.humanoid.Health <= 0 then
+		return
+	end
+	state.frozenUntil = math.max(state.frozenUntil or 0, os.clock() + seconds)
+	if not state.frozenColors then
+		local colors = {}
+		for _, part in model:GetDescendants() do
+			if part:IsA("BasePart") and part.Name ~= "HumanoidRootPart" then
+				colors[part] = part.Color
+				part.Color = part.Color:Lerp(ICE_COLOR, 0.65)
+			end
+		end
+		state.frozenColors = colors
+		for _, track in state.tracks do
+			track:AdjustSpeed(0)
+		end
+		state.humanoid:MoveTo(state.root.Position)
+	end
+	task.delay(seconds + 0.05, function()
+		if not isFrozen(state) then
+			unfreeze(state)
 		end
 	end)
 end
@@ -467,6 +524,10 @@ local function breakIn(state: ZombieState, barricade: BarricadeService.Barricade
 	while active[state.model] and humanoid.Health > 0 and root.Parent do
 		task.wait(THINK_INTERVAL)
 		maybeGroan(state)
+		if isFrozen(state) then
+			humanoid:MoveTo(root.Position)
+			continue
+		end
 
 		local depth = BarricadeService.depthInside(barricade, root.Position)
 		if depth > barricade.halfThickness + 2.5 then
@@ -565,6 +626,10 @@ local function runAI(state: ZombieState, barricade: BarricadeService.Barricade?)
 	while active[model] and humanoid.Health > 0 and root.Parent do
 		local dt = task.wait(THINK_INTERVAL)
 		maybeGroan(state)
+		if isFrozen(state) then
+			humanoid:MoveTo(root.Position)
+			continue
+		end
 		local target, ignore = findTarget(root.Position)
 
 		if not target then

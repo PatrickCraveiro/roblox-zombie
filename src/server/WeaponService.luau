@@ -219,6 +219,38 @@ local function onFire(player: Player, origin: any, hits: any)
 			zombiesHit[zombie] = true
 			PointsService.add(player, Config.PointsPerHit)
 		end
+		-- efeitos das armas especiais (Arsenal Lendário)
+		if damaged and killed and def.KillEffect then
+			Remotes.Gore:FireAllClients(def.KillEffect, part.Position)
+		elseif damaged and not killed and def.FreezeTime then
+			ZombieService.freeze(zombie, def.FreezeTime)
+		end
+	end
+
+	-- Corrente Elétrica: depois do acerto, o raio pula pros zumbis mais perto (cada pulo mais fraco)
+	local function chainLightning(firstZombie: Model, firstPosition: Vector3)
+		local struck = { [firstZombie] = true }
+		local points = { firstPosition }
+		local current, damage = firstPosition, def.Damage
+		for _ = 1, def.ChainJumps or 0 do
+			damage *= def.ChainFalloff or 0.8
+			local nearest, nearestDistance = nil, math.huge
+			for _, found in ZombieService.getZombiesInRadius(current, def.ChainRadius or 16) do
+				if not struck[found.model] and found.distance < nearestDistance then
+					nearest, nearestDistance = found, found.distance
+				end
+			end
+			if not nearest then
+				break
+			end
+			struck[nearest.model] = true
+			current = nearest.root.Position
+			table.insert(points, current)
+			applyDamage(nearest.model, damage, nearest.root)
+		end
+		if #points > 1 then
+			Remotes.Gore:FireAllClients("Arc", points)
+		end
 	end
 
 	-- Onda: o cliente só manda pra onde estava mirando
@@ -258,6 +290,9 @@ local function onFire(player: Player, origin: any, hits: any)
 
 		local headshot = part.Name == "Head"
 		applyDamage(zombie, def.Damage * (if headshot then def.HeadshotMultiplier else 1), part)
+		if def.ChainJumps then
+			chainLightning(zombie, position)
+		end
 	end
 end
 

@@ -40,6 +40,23 @@ Quiosques espalhados pelo mapa (itens e preços em `src/shared/Shop.luau`, efeit
 As melhorias aparecem como selos coloridos no canto da tela e somem quando você cai.
 Placar: Abates, Headshots (abate com tiro na cabeça, +50 pontos de bônus) e Pontos.
 
+## Premium: Arsenal Lendário (Game Pass)
+
+Passe pago com 3 armas exclusivas, mais fortes e com mais munição que as melhores da parede:
+
+| Arma | Preço na parede | Efeito |
+|---|---|---|
+| Canhão de Confete | 2500 pts | escopeta de 10 projéteis; o zumbi morto explode em confete |
+| Raio Congelante | 3000 pts | automática; cada tiro congela o zumbi (para de andar e de bater) |
+| Corrente Elétrica | 3500 pts | o raio pula pra até 3 zumbis por perto |
+
+- Ficam na **parede dourada** de cada fase: quem tem o passe compra com pontos; quem não tem vê a
+  janela de compra do passe. Não saem na Caixa Surpresa.
+- No **Treinamento** ficam de graça pra todo mundo experimentar, e no lobby tem a **vitrine** do passe.
+- Configuração dos passes: `src/shared/Premium.luau`. Pra vender de verdade, crie o passe no
+  Creator Hub (create.roblox.com → seu jogo → Monetização → Passes) e cole o ID lá.
+  Com `StudioOwnsAll = true`, no Studio todo mundo testa como se tivesse o passe.
+
 ## Ranking (salvo na nuvem da Roblox)
 
 O quadro "RANKING DOS SOBREVIVENTES" no lobby mostra os 5 melhores em abates, headshots e pontos

@@ -683,6 +683,12 @@ local function buildEntrada(parent: Instance)
 	wallBuy(parent, "SMG", X0 + 1, 44, Vector3.xAxis)
 	wallBuy(parent, "Pistol", X2 - 1, 36, -Vector3.xAxis)
 
+	-- parede dourada: Arsenal Lendário (premium; quem não tem o passe vê a loja dele)
+	for index, id in { "ConfettiCannon", "FreezeRay", "ChainLightning" } do
+		wallBuy(parent, id, -37 + index * 10, Z2 + 1, Vector3.zAxis)
+	end
+	chalkboard(parent, Vector3.new(-17, 8.7, Z2 + 1.15), Vector3.zAxis, Vector2.new(28, 1.4), "★ ARSENAL LENDÁRIO ★", false, Color3.fromRGB(40, 30, 10), Color3.fromRGB(255, 205, 50))
+
 
 	boxSpot(parent, 20, 40, -Vector3.xAxis, "Entrada")
 	playerSpawn(parent, -70, 58)

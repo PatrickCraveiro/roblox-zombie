@@ -96,7 +96,8 @@ local function refreshHud()
 	end
 
 	local low = slot.mag <= math.ceil(def.MagSize * 0.25)
-	local color = if slot.upgraded then WeaponStats.upgradeColor(slot.id) else nil
+	-- turbinada: cor do upgrade; premium (Arsenal Lendário): dourado
+	local color = if slot.upgraded then WeaponStats.upgradeColor(slot.id) elseif def.Pass then Color3.fromRGB(255, 200, 40) else nil
 	hud.setWeapon(def.Name, slot.mag, slot.reserve, low, color)
 	if reloading then
 		hud.setHint("RECARREGANDO...")
@@ -308,7 +309,8 @@ local function fire()
 				table.insert(pelletIgnore, zombie)
 			end
 
-			Effects.tracer(muzzlePosition, endPosition, tracerColor)
+			local colors = def.TracerColors
+			Effects.tracer(muzzlePosition, endPosition, tracerColor or (if colors then colors[math.random(#colors)] else nil))
 		end
 	end
 

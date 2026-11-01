@@ -252,6 +252,62 @@ local STYLES: { [string]: Style } = {
 			{ name = "EmitterTip", size = Vector3.new(0.06, 0.32, 0.32), cframe = CFrame.new(0, 0.55, -1.38) * ALONG_Z, color = GLOW_GREEN, material = Enum.Material.Neon, shape = Enum.PartType.Cylinder },
 		},
 	},
+
+	-- ===== Arsenal Lendário (premium) =====
+
+	ConfettiCannon = {
+		muzzle = Vector3.new(0, 0.5, -2.25),
+		sightHeight = 0.95,
+		parts = {
+			{ name = "Grip", size = Vector3.new(0.22, 0.5, 0.3), cframe = CFrame.new(0, 0, 0), color = Color3.fromRGB(90, 30, 110) },
+			{ name = "Body", size = Vector3.new(0.45, 0.45, 1.0), cframe = CFrame.new(0, 0.4, -0.3), color = Color3.fromRGB(150, 60, 200) },
+			{ name = "Barrel", size = Vector3.new(1.4, 0.5, 0.5), cframe = CFrame.new(0, 0.5, -1.4) * ALONG_Z, color = Color3.fromRGB(255, 205, 40), shape = Enum.PartType.Cylinder },
+			{ name = "Bell", size = Vector3.new(0.15, 0.72, 0.72), cframe = CFrame.new(0, 0.5, -2.15) * ALONG_Z, color = Color3.fromRGB(255, 80, 160), shape = Enum.PartType.Cylinder },
+			{ name = "BandRed", size = Vector3.new(0.08, 0.54, 0.54), cframe = CFrame.new(0, 0.5, -1.0) * ALONG_Z, color = Color3.fromRGB(240, 50, 50), material = Enum.Material.Neon, shape = Enum.PartType.Cylinder },
+			{ name = "BandGreen", size = Vector3.new(0.08, 0.54, 0.54), cframe = CFrame.new(0, 0.5, -1.4) * ALONG_Z, color = Color3.fromRGB(60, 220, 90), material = Enum.Material.Neon, shape = Enum.PartType.Cylinder },
+			{ name = "BandBlue", size = Vector3.new(0.08, 0.54, 0.54), cframe = CFrame.new(0, 0.5, -1.8) * ALONG_Z, color = Color3.fromRGB(60, 140, 255), material = Enum.Material.Neon, shape = Enum.PartType.Cylinder },
+			-- reservatório de confete em cima
+			{ name = "Hopper", size = Vector3.new(0.4, 0.35, 0.5), cframe = CFrame.new(0, 0.82, -0.35), color = Color3.fromRGB(230, 230, 240), material = Enum.Material.Glass },
+			{ name = "ConfettiA", size = Vector3.new(0.14, 0.14, 0.14), cframe = CFrame.new(-0.08, 0.86, -0.4), color = Color3.fromRGB(255, 80, 160), material = Enum.Material.Neon },
+			{ name = "ConfettiB", size = Vector3.new(0.14, 0.14, 0.14), cframe = CFrame.new(0.08, 0.84, -0.28), color = Color3.fromRGB(80, 220, 255), material = Enum.Material.Neon },
+			{ name = "Stock", size = Vector3.new(0.2, 0.3, 0.6), cframe = CFrame.new(0, 0.3, 0.6), color = Color3.fromRGB(150, 60, 200) },
+		},
+	},
+
+	FreezeRay = {
+		muzzle = Vector3.new(0, 0.5, -2.05),
+		sightHeight = 0.95,
+		parts = {
+			{ name = "Grip", size = Vector3.new(0.22, 0.5, 0.3), cframe = CFrame.new(0, 0, 0), color = DARK },
+			{ name = "Body", size = Vector3.new(0.38, 0.42, 1.2), cframe = CFrame.new(0, 0.45, -0.35), color = Color3.fromRGB(215, 235, 248) },
+			{ name = "Barrel", size = Vector3.new(1.1, 0.22, 0.22), cframe = CFrame.new(0, 0.5, -1.45) * ALONG_Z, color = METAL, material = Enum.Material.Metal, shape = Enum.PartType.Cylinder },
+			{ name = "Coil1", size = Vector3.new(0.08, 0.44, 0.44), cframe = CFrame.new(0, 0.5, -1.15) * ALONG_Z, color = Color3.fromRGB(110, 230, 255), material = Enum.Material.Neon, shape = Enum.PartType.Cylinder },
+			{ name = "Coil2", size = Vector3.new(0.08, 0.44, 0.44), cframe = CFrame.new(0, 0.5, -1.45) * ALONG_Z, color = Color3.fromRGB(110, 230, 255), material = Enum.Material.Neon, shape = Enum.PartType.Cylinder },
+			{ name = "Coil3", size = Vector3.new(0.08, 0.44, 0.44), cframe = CFrame.new(0, 0.5, -1.75) * ALONG_Z, color = Color3.fromRGB(110, 230, 255), material = Enum.Material.Neon, shape = Enum.PartType.Cylinder },
+			{ name = "Tip", size = Vector3.new(0.12, 0.3, 0.3), cframe = CFrame.new(0, 0.5, -2.0) * ALONG_Z, color = Color3.fromRGB(180, 245, 255), material = Enum.Material.Neon, shape = Enum.PartType.Cylinder },
+			-- tanque de gelo em cima
+			{ name = "Tank", size = Vector3.new(0.7, 0.3, 0.3), cframe = CFrame.new(0, 0.8, -0.3) * ALONG_Z, color = Color3.fromRGB(150, 210, 240), material = Enum.Material.Glass, shape = Enum.PartType.Cylinder },
+			{ name = "Stock", size = Vector3.new(0.15, 0.3, 0.6), cframe = CFrame.new(0, 0.35, 0.65), color = Color3.fromRGB(215, 235, 248) },
+		},
+	},
+
+	ChainLightning = {
+		muzzle = Vector3.new(0, 0.5, -2.15),
+		sightHeight = 1.0,
+		parts = {
+			{ name = "Grip", size = Vector3.new(0.22, 0.5, 0.3), cframe = CFrame.new(0, 0, 0), color = BLACK },
+			{ name = "Body", size = Vector3.new(0.36, 0.45, 1.1), cframe = CFrame.new(0, 0.45, -0.3), color = DARK, material = Enum.Material.Metal },
+			{ name = "Core", size = Vector3.new(0.8, 0.3, 0.3), cframe = CFrame.new(0, 0.5, -1.2) * ALONG_Z, color = METAL, material = Enum.Material.Metal, shape = Enum.PartType.Cylinder },
+			{ name = "Coil1", size = Vector3.new(0.08, 0.42, 0.42), cframe = CFrame.new(0, 0.5, -0.95) * ALONG_Z, color = Color3.fromRGB(255, 230, 60), material = Enum.Material.Neon, shape = Enum.PartType.Cylinder },
+			{ name = "Coil2", size = Vector3.new(0.08, 0.42, 0.42), cframe = CFrame.new(0, 0.5, -1.3) * ALONG_Z, color = Color3.fromRGB(255, 230, 60), material = Enum.Material.Neon, shape = Enum.PartType.Cylinder },
+			-- os dois "dentes" de onde sai o raio
+			{ name = "ProngLeft", size = Vector3.new(0.08, 0.08, 0.7), cframe = CFrame.new(-0.13, 0.5, -1.85), color = Color3.fromRGB(255, 240, 120), material = Enum.Material.Neon },
+			{ name = "ProngRight", size = Vector3.new(0.08, 0.08, 0.7), cframe = CFrame.new(0.13, 0.5, -1.85), color = Color3.fromRGB(255, 240, 120), material = Enum.Material.Neon },
+			{ name = "Battery", size = Vector3.new(0.3, 0.32, 0.55), cframe = CFrame.new(0, 0.86, -0.3), color = Color3.fromRGB(255, 200, 30) },
+			{ name = "BatteryStripe", size = Vector3.new(0.31, 0.08, 0.56), cframe = CFrame.new(0, 0.86, -0.3), color = BLACK },
+			{ name = "Stock", size = Vector3.new(0.15, 0.3, 0.6), cframe = CFrame.new(0, 0.35, 0.65), color = DARK },
+		},
+	},
 }
 
 local function newPart(name: string, size: Vector3, cframe: CFrame, color: Color3, anchored: boolean): Part

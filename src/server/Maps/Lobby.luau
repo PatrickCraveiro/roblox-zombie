@@ -14,6 +14,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Config = require(ReplicatedStorage.Shared.Config)
 local Weapons = require(ReplicatedStorage.Shared.Weapons)
+local WeaponModels = require(ReplicatedStorage.Shared.WeaponModels)
 local MapKit = require(script.Parent.MapKit)
 
 local box = MapKit.box
@@ -298,6 +299,36 @@ local function stadiumFacade(parent: Instance, map: MapInfo, x: number, frontZ: 
 	end
 end
 
+-- Vitrine do Arsenal Lendário (passe premium): as 3 armas expostas em cima do balcão e o botão
+-- de comprar (o PremiumService põe o botão nas partes com a tag "PremiumStand")
+local function premiumStand(parent: Instance, position: Vector3, facing: Vector3)
+	local base = CFrame.lookAt(position, position + facing)
+	local gold = Color3.fromRGB(235, 185, 50)
+	local counter = box(parent, "PremiumCounter", Vector3.new(13, 3.4, 3), base * CFrame.new(0, 1.7, 0), Color3.fromRGB(35, 28, 20), Enum.Material.Wood)
+	counter:SetAttribute("Pass", "Arsenal")
+	tag(counter, "PremiumStand")
+	box(parent, "PremiumTrim", Vector3.new(13.1, 0.3, 3.1), base * CFrame.new(0, 3.35, 0), gold, Enum.Material.Neon)
+
+	for _, x in { -6, 6 } do
+		box(parent, "PremiumPost", Vector3.new(0.4, 6.5, 0.4), base * CFrame.new(x, 6.65, 1.3), Color3.fromRGB(35, 28, 20), Enum.Material.Metal)
+	end
+	local sign = box(parent, "PremiumSign", Vector3.new(13, 3.6, 0.4), base * CFrame.new(0, 9.4, 1.3), Color3.fromRGB(25, 20, 12))
+	writeOn(sign, Enum.NormalId.Front, "★ ARSENAL LENDÁRIO ★\n3 armas exclusivas • mais dano e munição\nTeste grátis no Treinamento", gold, nil, 40)
+	local light = Instance.new("PointLight")
+	light.Color = gold
+	light.Range = 16
+	light.Brightness = 1.5
+	light.Parent = sign
+
+	-- as armas deitadas em cima do balcão, com o cano pra direita de quem olha
+	for index, id in { "ConfettiCannon", "FreezeRay", "ChainLightning" } do
+		local model = WeaponModels.build(id, true)
+		model:ScaleTo(2)
+		model:PivotTo(base * CFrame.new((index - 2) * 4.2, 4.2, 0) * CFrame.Angles(0, math.rad(90), 0))
+		model.Parent = parent
+	end
+end
+
 -- Quadro do ranking (o RankingService preenche as listas "List_<Best|Total>_<stat>" e o "Status")
 local function rankingBoard(parent: Instance, position: Vector3, facing: Vector3)
 	local width, height = 34, 15
@@ -396,6 +427,10 @@ local function buildPlaza(parent: Instance, maps: { MapInfo })
 	-- quadro do ranking, à direita de quem nasce (fora dos caminhos), virado pro spawn
 	local rankingPosition = Vector3.new(78, 0, 52)
 	rankingBoard(parent, rankingPosition, (Vector3.new(30, 0, 55) - rankingPosition).Unit)
+
+	-- vitrine do Arsenal Lendário (premium), à esquerda de quem nasce
+	local premiumPosition = Vector3.new(-35, 0, 66)
+	premiumStand(parent, premiumPosition, (Vector3.new(30, 0, 55) - premiumPosition).Unit)
 
 	-- placa de boas-vindas ao lado do spawn
 	local welcomePosition = Vector3.new(-10, 4, 48)
@@ -589,27 +624,33 @@ end
 
 -- Armas de graça nas paredes e a Máquina de Upgrade grátis
 local function trainingArmory(parent: Instance)
-	local wallIds, boxIds = {}, {}
+	local wallIds, boxIds, premiumIds = {}, {}, {}
 	for id, def in Weapons do
-		table.insert(if def.BoxOnly then boxIds else wallIds, id)
+		table.insert(if def.Pass then premiumIds elseif def.BoxOnly then boxIds else wallIds, id)
 	end
-	table.sort(wallIds, function(a, b)
+	local function byPrice(a: string, b: string): boolean
 		return Weapons[a].Price < Weapons[b].Price
-	end)
+	end
+	table.sort(wallIds, byPrice)
+	table.sort(premiumIds, byPrice)
 	table.sort(boxIds, function(a, b)
 		return (Weapons[a].BoxWeight :: number) > (Weapons[b].BoxWeight :: number)
 	end)
 
-	local function weaponRow(ids: { string }, z: number, inward: Vector3, title: string, color: Color3)
-		for index, id in ids do
-			local position = Vector3.new(FIRING_LINE_X + 2 - index * 8, 5.5, z) + inward * 0.25
+	-- fileira de placas na parede; "firstIndex" continua uma fileira que já começou
+	local function weaponRow(ids: { string }, z: number, inward: Vector3, title: string, color: Color3, firstIndex: number?)
+		local first = firstIndex or 1
+		for offset, id in ids do
+			local position = Vector3.new(FIRING_LINE_X + 2 - (first + offset - 1) * 8, 5.5, z) + inward * 0.25
 			MapKit.wallBuy(parent, id, CFrame.lookAt(position, position + inward), 0)
 		end
-		local signPosition = Vector3.new(FIRING_LINE_X + 2 - (#ids + 1) * 4, 9.5, z) + inward * 0.2
+		local signPosition = Vector3.new(FIRING_LINE_X + 2 - (first + (#ids - 1) / 2) * 8, 9.5, z) + inward * 0.2
 		wallSign(parent, title, CFrame.lookAt(signPosition, signPosition + inward), #ids * 8 - 2, color)
 	end
 	weaponRow(wallIds, RANGE_MAX_Z, -Vector3.zAxis, "ARMAS DE PAREDE", COLOR.White)
 	weaponRow(boxIds, RANGE_MIN_Z, Vector3.zAxis, "SÓ NA CAIXA SURPRESA", COLOR.Yellow)
+	-- as premium continuam a fileira da caixa: grátis aqui pra todo mundo experimentar
+	weaponRow(premiumIds, RANGE_MIN_Z, Vector3.zAxis, "★ ARSENAL LENDÁRIO (TESTE GRÁTIS)", Color3.fromRGB(255, 205, 50), #boxIds + 1)
 
 	local machinePosition = Vector3.new(FIRING_LINE_X + 5, 0, RANGE_MIN_Z + 2.5)
 	MapKit.upgradeMachine(parent, CFrame.lookAt(machinePosition, machinePosition + Vector3.zAxis), 0)

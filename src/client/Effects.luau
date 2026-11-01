@@ -149,6 +149,17 @@ function Effects.init()
 			local direction, range, halfAngle, color = ...
 			Effects.wave(position, direction, range, halfAngle, color)
 			return
+		elseif kind == "Confetti" then
+			Effects.confetti(position)
+			Sounds.playAt(Sounds.Ids.BoxReady, position, 0.7, 1.4 + math.random() * 0.3)
+			return
+		elseif kind == "Arc" then
+			local points = position :: any -- a lista de pontos por onde o raio passou
+			if typeof(points) == "table" and #points > 1 then
+				Effects.arc(points)
+				Sounds.playAt(Sounds.Ids.Explosion, points[#points], 0.4, 2)
+			end
+			return
 		end
 		Effects.gore(position)
 		local soundId = if kind == "Head" then Sounds.Ids.Headshot else Sounds.Ids.LimbSever
@@ -185,6 +196,47 @@ function Effects.damageNumber(position: Vector3, amount: number, headshot: boole
 	task.delay(0.9, function()
 		anchor:Destroy()
 	end)
+end
+
+local CONFETTI_COLORS = {
+	Color3.fromRGB(255, 80, 160),
+	Color3.fromRGB(255, 220, 60),
+	Color3.fromRGB(80, 220, 255),
+	Color3.fromRGB(120, 255, 120),
+	Color3.fromRGB(190, 110, 255),
+	Color3.fromRGB(255, 140, 60),
+}
+
+-- Canhão de Confete: o zumbi que morre explode numa chuva de papelzinho colorido
+function Effects.confetti(position: Vector3)
+	for _ = 1, 28 do
+		local color = CONFETTI_COLORS[math.random(#CONFETTI_COLORS)]
+		local piece = newPart(Vector3.new(0.35, 0.05, 0.25), CFrame.new(position) * CFrame.Angles(math.random() * 6, math.random() * 6, math.random() * 6), color, Enum.Material.Neon)
+		local direction = (Vector3.yAxis * 1.5 + randomVector() * 2).Unit
+		local goal = CFrame.new(position + direction * (3 + math.random() * 4) - Vector3.new(0, 2, 0)) * CFrame.Angles(math.random() * 6, math.random() * 6, 0)
+		fadeAndDestroy(piece, 1.2 + math.random() * 0.4, { CFrame = goal })
+	end
+end
+
+-- Corrente Elétrica: um raio amarelo em zigue-zague passando pelos pontos (zumbi a zumbi)
+function Effects.arc(points: { Vector3 })
+	for index = 1, #points - 1 do
+		local from, to = points[index], points[index + 1]
+		local previous = from
+		local segments = 5
+		for step = 1, segments do
+			local target = from:Lerp(to, step / segments)
+			if step < segments then
+				target += randomVector() * 1.6
+			end
+			local length = (target - previous).Magnitude
+			if length > 0.05 then
+				local bolt = newPart(Vector3.new(0.18, 0.18, length), CFrame.lookAt(previous, target) * CFrame.new(0, 0, -length / 2), Color3.fromRGB(255, 240, 120), Enum.Material.Neon)
+				fadeAndDestroy(bolt, 0.25)
+			end
+			previous = target
+		end
+	end
 end
 
 -- Onda do micro-ondas: um leque de "paredes" de energia saindo do jogador e sumindo.

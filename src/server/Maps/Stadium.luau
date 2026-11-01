@@ -402,6 +402,12 @@ local function buildEntrada(parent: Instance)
 	wallBuy(parent, "Pistol", -40, ZF - 1, -Vector3.zAxis)
 	wallBuy(parent, "SMG", 40, ZF - 1, -Vector3.zAxis)
 
+	-- parede dourada: Arsenal Lendário (premium; quem não tem o passe vê a loja dele)
+	for index, id in { "ConfettiCannon", "FreezeRay", "ChainLightning" } do
+		wallBuy(parent, id, -24 + index * 12, ZF - 1, -Vector3.zAxis)
+	end
+	sign(parent, Vector3.new(0, 8.4, ZF - 1.2), -Vector3.zAxis, Vector2.new(32, 1.2), "★ ARSENAL LENDÁRIO ★", Color3.fromRGB(40, 30, 10), Color3.fromRGB(255, 205, 50))
+
 	-- quiosque do Colete, encostado na parede dos camarotes
 	local armorPosition = Vector3.new(-BOX_X - 2.3, 0, 68)
 	MapKit.shopStand(parent, CFrame.lookAt(armorPosition, armorPosition - Vector3.xAxis), "Armor")

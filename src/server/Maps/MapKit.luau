@@ -4,6 +4,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Config = require(ReplicatedStorage.Shared.Config)
 local Shop = require(ReplicatedStorage.Shared.Shop)
+local Weapons = require(ReplicatedStorage.Shared.Weapons)
 
 local MapKit = {}
 
@@ -92,7 +93,10 @@ end
 -- Placa de arma na parede: o WallBuyService prende a arma em 3D, o nome e o preço nela.
 -- A frente da placa fica pro LookVector do cframe. price nil = preço normal da arma
 function MapKit.wallBuy(parent: Instance, weaponId: string, cframe: CFrame, price: number?): Part
-	local part = MapKit.box(parent, "WallBuy_" .. weaponId, Vector3.new(7, 4, 0.4), cframe, Color3.fromRGB(210, 205, 190), nil, { CanCollide = false })
+	-- arma premium ganha placa dourada
+	local premium = Weapons[weaponId] ~= nil and Weapons[weaponId].Pass ~= nil
+	local boardColor = if premium then Color3.fromRGB(225, 180, 60) else Color3.fromRGB(210, 205, 190)
+	local part = MapKit.box(parent, "WallBuy_" .. weaponId, Vector3.new(7, 4, 0.4), cframe, boardColor, if premium then Enum.Material.Metal else nil, { CanCollide = false })
 	part:SetAttribute("WeaponId", weaponId)
 	if price then
 		part:SetAttribute("Price", price)

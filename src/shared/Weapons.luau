@@ -41,6 +41,13 @@ export type WeaponDef = {
 	Scope: boolean?, -- mirando, esconde a arma e mostra a lente da luneta
 	BoxWeight: number?, -- chance relativa de sair na Caixa Surpresa (sem = nunca sai)
 	BoxOnly: boolean?, -- só sai na caixa (não tem na parede)
+	Pass: string?, -- arma premium: precisa desse passe (Premium.luau) pra comprar na parede dourada
+	TracerColors: { Color3 }?, -- cores do rastro do tiro (sorteia uma por bala)
+	KillEffect: string?, -- "Confetti": o zumbi que morre explode em confete
+	FreezeTime: number?, -- cada acerto congela o zumbi por esses segundos
+	ChainJumps: number?, -- o raio pula pra até N zumbis perto de quem levou o tiro
+	ChainRadius: number?, -- distância máxima de cada pulo
+	ChainFalloff: number?, -- dano de cada pulo = dano do anterior x isso
 	Upgrade: UpgradeDef?, -- versão turbinada especial (ver o topo do arquivo)
 }
 
@@ -349,6 +356,88 @@ local Weapons: { [string]: WeaponDef } = {
 			WaveAngle = 80,
 			Knockback = 100,
 		},
+	},
+
+	-- ===== Arsenal Lendário (premium: passe "Arsenal") =====
+	-- Ficam na parede dourada de cada fase (custam pontos, mas só pra quem tem o passe) e no
+	-- Treinamento de graça pra todo mundo experimentar. Não saem na Caixa Surpresa.
+
+	ConfettiCannon = {
+		Name = "Canhão de Confete",
+		Damage = 70,
+		HeadshotMultiplier = 1.5,
+		FireRate = 0.3,
+		Automatic = false,
+		MagSize = 16,
+		MaxReserve = 160,
+		ReloadTime = 2,
+		Range = 80,
+		Spread = 6,
+		AimSpread = 4,
+		Pellets = 10,
+		Pierce = 2,
+		Recoil = 4,
+		Price = 2500,
+		FireSound = "rbxassetid://9112913054",
+		FireVolume = 0.7,
+		FirePitch = 1.25,
+		Pass = "Arsenal",
+		KillEffect = "Confetti",
+		TracerColors = {
+			Color3.fromRGB(255, 80, 160),
+			Color3.fromRGB(255, 220, 60),
+			Color3.fromRGB(80, 220, 255),
+			Color3.fromRGB(120, 255, 120),
+			Color3.fromRGB(190, 110, 255),
+		},
+	},
+
+	FreezeRay = {
+		Name = "Raio Congelante",
+		Damage = 65,
+		HeadshotMultiplier = 2,
+		FireRate = 0.08,
+		Automatic = true,
+		MagSize = 80,
+		MaxReserve = 480,
+		ReloadTime = 2,
+		Range = 200,
+		Spread = 1,
+		AimSpread = 0.3,
+		Pellets = 1,
+		Recoil = 0.6,
+		Price = 3000,
+		FireSound = "rbxassetid://9114277757",
+		FireVolume = 0.35,
+		FirePitch = 1.8,
+		Pass = "Arsenal",
+		FreezeTime = 1.5,
+		TracerColors = { Color3.fromRGB(150, 240, 255) },
+	},
+
+	ChainLightning = {
+		Name = "Corrente Elétrica",
+		Damage = 220,
+		HeadshotMultiplier = 2,
+		FireRate = 0.25,
+		Automatic = false,
+		MagSize = 24,
+		MaxReserve = 240,
+		ReloadTime = 2.2,
+		Range = 220,
+		Spread = 0.6,
+		AimSpread = 0.1,
+		Pellets = 1,
+		Recoil = 2.5,
+		Price = 3500,
+		FireSound = "rbxassetid://9114277757",
+		FireVolume = 0.7,
+		FirePitch = 0.75,
+		Pass = "Arsenal",
+		ChainJumps = 3,
+		ChainRadius = 18,
+		ChainFalloff = 0.8,
+		TracerColors = { Color3.fromRGB(255, 240, 120) },
 	},
 }
 
