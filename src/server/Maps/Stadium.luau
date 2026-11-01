@@ -194,17 +194,21 @@ local function playerSpawn(parent: Instance, x: number, z: number)
 	spawnLocation.Parent = parent
 end
 
--- Luminárias no teto em grade (algumas piscam)
-local function lights(parent: Instance, xA: number, zA: number, xB: number, zB: number, color: Color3)
+-- Luminárias no teto em grade (algumas piscam). As luzes da Roblox atravessam paredes e somam:
+-- por isso são fracas, e "skip(x, z)" pula as que cairiam em cima de outra sala
+local function lights(parent: Instance, xA: number, zA: number, xB: number, zB: number, color: Color3, brightness: number?, skip: ((number, number) -> boolean)?)
 	local countX, countZ = math.max(1, math.floor((xB - xA) / 22)), math.max(1, math.floor((zB - zA) / 22))
 	for i = 1, countX do
 		for j = 1, countZ do
 			local x, z = xA + (i - 0.5) * (xB - xA) / countX, zA + (j - 0.5) * (zB - zA) / countZ
+			if skip and skip(x, z) then
+				continue
+			end
 			local lamp = box(parent, "CeilingLight", Vector3.new(4, 0.3, 1.2), CFrame.new(x, HEIGHT - 0.15, z), color, Enum.Material.Neon, { CastShadow = false })
 			local light = Instance.new("PointLight")
 			light.Color = color
 			light.Range = 30
-			light.Brightness = 1
+			light.Brightness = brightness or 0.7
 			light.Parent = lamp
 			if rng:NextNumber() < 0.25 then
 				CollectionService:AddTag(lamp, "Flicker")
@@ -405,7 +409,10 @@ local function buildEntrada(parent: Instance)
 	boxSpot(parent, 80, 80, -Vector3.xAxis, "Entrada")
 	playerSpawn(parent, -10, 82)
 	playerSpawn(parent, 10, 82)
-	lights(parent, -XO, ZS, XO, ZF, Color3.fromRGB(235, 240, 255))
+	-- (sem lâmpadas em cima dos camarotes: eles têm as deles)
+	lights(parent, -XO, ZS, XO, ZF, Color3.fromRGB(235, 235, 245), 0.7, function(x, z)
+		return math.abs(x) < BOX_X + 4 and z < BOX_Z + 4
+	end)
 end
 
 -- Banheiro do vestiário, encostado na parede de fora: dois cômodos de paredes altas (chuveiros e
@@ -414,7 +421,7 @@ local function buildBathroom(parent: Instance, side: number, color: Color3)
 	local outer = side * (XO - WALL / 2) -- face de dentro da parede de fora
 	local divider = side * 112 -- parede que separa o banheiro do corredor
 	local zA, zMid, zB = -52, -38, -24
-	local tile = Color3.fromRGB(235, 240, 245)
+	local tile = Color3.fromRGB(205, 212, 218) -- azulejo claro, mas não branco puro (estoura com a luz)
 	local metal = Color3.fromRGB(180, 180, 185)
 	local decor = { CanCollide = false, CanQuery = false }
 	local function x(d: number): number -- "d" studs da parede de fora pra dentro
@@ -488,8 +495,8 @@ local function buildBathroom(parent: Instance, side: number, color: Color3)
 	for _, z in { (zA + zMid) / 2, (zMid + zB) / 2 } do
 		local lamp = box(parent, "CeilingLight", Vector3.new(3, 0.3, 1.2), CFrame.new(x(7.5), HEIGHT - 0.15, z), Color3.fromRGB(240, 245, 255), Enum.Material.Neon, { CastShadow = false })
 		local light = Instance.new("PointLight")
-		light.Range = 18
-		light.Brightness = 1.2
+		light.Range = 16
+		light.Brightness = 0.6
 		light.Parent = lamp
 	end
 end
@@ -539,7 +546,7 @@ local function buildLockerRoom(parent: Instance, side: number, color: Color3, ti
 	block(parent, "WaterCooler", Vector3.new(1.4, 3, 1.4), inner + side * 1.2, 0, COLOR.White)
 	block(parent, "WaterJug", Vector3.new(1.2, 1.6, 1.2), inner + side * 1.2, 0, Color3.fromRGB(120, 180, 230), Enum.Material.Glass, { Transparency = 0.3 }, 3)
 
-	lights(parent, math.min(side * XO, side * XI), ZC, math.max(side * XO, side * XI), ZS, Color3.fromRGB(230, 240, 255))
+	lights(parent, math.min(side * XO, side * XI), ZC, math.max(side * XO, side * XI), ZS, Color3.fromRGB(230, 240, 255), 0.6)
 end
 
 -- Arquibancada norte: corredor plano na frente e os degraus coloridos subindo até o fundo
@@ -723,7 +730,7 @@ local function buildCamarotes(parent: Instance)
 	sign(parent, Vector3.new(0, 12, BOX_Z - 1.2), -Vector3.zAxis, Vector2.new(20, 2.4), "CAMAROTE VIP", COLOR.Yellow, COLOR.Red)
 
 	boxSpot(parent, 0, 71, -Vector3.zAxis, "Camarotes")
-	lights(parent, -BOX_X, ZS, BOX_X, BOX_Z, Color3.fromRGB(255, 230, 190))
+	lights(parent, -BOX_X, ZS, BOX_X, BOX_Z, Color3.fromRGB(255, 225, 180), 0.5)
 end
 
 local function buildVisitorExtras(parent: Instance)

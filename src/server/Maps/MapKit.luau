@@ -209,7 +209,7 @@ function MapKit.shopStand(parent: Instance, cframe: CFrame, itemId: string): Par
 	counter:SetAttribute("ItemId", itemId)
 	MapKit.tag(counter, "ShopItem")
 	MapKit.box(model, "CounterStripe", Vector3.new(5.05, 0.3, 0.1), cframe * CFrame.new(0, 2.8, -1.22), item.Color, Enum.Material.Neon)
-	MapKit.box(model, "CounterTop", Vector3.new(5.3, 0.2, 2.7), cframe * CFrame.new(0, 3.3, 0), Color3.fromRGB(235, 235, 230))
+	MapKit.box(model, "CounterTop", Vector3.new(5.3, 0.2, 2.7), cframe * CFrame.new(0, 3.3, 0), Color3.fromRGB(185, 185, 180))
 
 	-- placa atrás do balcão com nome, descrição e preço
 	for _, x in { -2.6, 2.6 } do
