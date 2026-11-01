@@ -153,6 +153,10 @@ function Effects.init()
 			Effects.confetti(position)
 			Sounds.playAt(Sounds.Ids.BoxReady, position, 0.7, 1.4 + math.random() * 0.3)
 			return
+		elseif kind == "Embers" then
+			Effects.embers(position)
+			Sounds.playAt(Sounds.Ids.Explosion, position, 0.35, 1.6 + math.random() * 0.3)
+			return
 		elseif kind == "Arc" then
 			local points = position :: any -- a lista de pontos por onde o raio passou
 			if typeof(points) == "table" and #points > 1 then
@@ -216,6 +220,25 @@ function Effects.confetti(position: Vector3)
 		local goal = CFrame.new(position + direction * (3 + math.random() * 4) - Vector3.new(0, 2, 0)) * CFrame.Angles(math.random() * 6, math.random() * 6, 0)
 		fadeAndDestroy(piece, 1.2 + math.random() * 0.4, { CFrame = goal })
 	end
+end
+
+-- Metralhadora Dragão: o zumbi que morre vira brasa (faíscas laranjas subindo e um clarão)
+function Effects.embers(position: Vector3)
+	for _ = 1, 18 do
+		local color = Color3.fromRGB(255, math.random(60, 180), 20)
+		local spark = newPart(Vector3.one * (0.15 + math.random() * 0.2), CFrame.new(position + randomVector()), color, Enum.Material.Neon)
+		local goal = CFrame.new(position + Vector3.new(0, 3 + math.random() * 4, 0) + randomVector() * 3)
+		fadeAndDestroy(spark, 0.8 + math.random() * 0.6, { CFrame = goal, Size = Vector3.one * 0.05 })
+	end
+	local glow = newPart(Vector3.one * 0.1, CFrame.new(position), Color3.fromRGB(255, 120, 30))
+	glow.Transparency = 1
+	local light = Instance.new("PointLight")
+	light.Color = Color3.fromRGB(255, 120, 30)
+	light.Range = 12
+	light.Brightness = 4
+	light.Parent = glow
+	TweenService:Create(light, TweenInfo.new(0.5), { Brightness = 0 }):Play()
+	task.delay(0.55, glow.Destroy, glow)
 end
 
 -- Corrente Elétrica: um raio amarelo em zigue-zague passando pelos pontos (zumbi a zumbi)

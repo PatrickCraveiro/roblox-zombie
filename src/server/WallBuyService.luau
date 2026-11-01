@@ -113,7 +113,7 @@ local function setupWallBuy(instance: Instance)
 	prompt.ActionText = (if price == 0 then "Pegar " else "Comprar ") .. def.Name
 	prompt.ObjectText = if price == 0
 		then (if def.Pass then "Grátis pra testar (premium)" else "Grátis")
-		elseif passName then string.format("%d pts  |  ★ %s", price, passName)
+		elseif passName then string.format("%d pts  |  ★ VIP (%d Robux)", price, Premium.Passes[def.Pass :: string].Robux)
 		else string.format("%d pts  |  munição: %d pts", price, ammoPrice)
 	prompt.MaxActivationDistance = 8
 	prompt.RequiresLineOfSight = false

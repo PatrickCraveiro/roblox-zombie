@@ -308,6 +308,45 @@ local STYLES: { [string]: Style } = {
 			{ name = "Stock", size = Vector3.new(0.15, 0.3, 0.6), cframe = CFrame.new(0, 0.35, 0.65), color = DARK },
 		},
 	},
+
+	-- metralhadora pesada vermelha e dourada, com tambor de munição e boca de dragão
+	DragonMG = {
+		muzzle = Vector3.new(0, 0.45, -2.85),
+		sightHeight = 0.9,
+		parts = {
+			{ name = "Grip", size = Vector3.new(0.22, 0.5, 0.3), cframe = CFrame.new(0, 0, 0), color = BLACK },
+			{ name = "Body", size = Vector3.new(0.5, 0.55, 1.5), cframe = CFrame.new(0, 0.4, -0.35), color = Color3.fromRGB(140, 25, 25), material = Enum.Material.Metal },
+			{ name = "Shroud", size = Vector3.new(1.2, 0.42, 0.42), cframe = CFrame.new(0, 0.45, -1.6) * ALONG_Z, color = BLACK, material = Enum.Material.Metal, shape = Enum.PartType.Cylinder },
+			{ name = "Barrel", size = Vector3.new(0.7, 0.2, 0.2), cframe = CFrame.new(0, 0.45, -2.4) * ALONG_Z, color = METAL, material = Enum.Material.Metal, shape = Enum.PartType.Cylinder },
+			{ name = "DragonHead", size = Vector3.new(0.5, 0.42, 0.5), cframe = CFrame.new(0, 0.45, -2.7), color = Color3.fromRGB(230, 180, 50), material = Enum.Material.Metal },
+			{ name = "EyeLeft", size = Vector3.new(0.08, 0.08, 0.08), cframe = CFrame.new(-0.26, 0.55, -2.72), color = Color3.fromRGB(255, 120, 20), material = Enum.Material.Neon },
+			{ name = "EyeRight", size = Vector3.new(0.08, 0.08, 0.08), cframe = CFrame.new(0.26, 0.55, -2.72), color = Color3.fromRGB(255, 120, 20), material = Enum.Material.Neon },
+			-- tambor de munição embaixo (2000 balas!)
+			{ name = "Drum", size = Vector3.new(0.45, 1.0, 1.0), cframe = CFrame.new(0, -0.05, -0.75), color = Color3.fromRGB(230, 180, 50), material = Enum.Material.Metal, shape = Enum.PartType.Cylinder },
+			{ name = "DrumCap", size = Vector3.new(0.47, 0.5, 0.5), cframe = CFrame.new(0, -0.05, -0.75), color = Color3.fromRGB(140, 25, 25), shape = Enum.PartType.Cylinder },
+			{ name = "TopHandle", size = Vector3.new(0.1, 0.25, 0.6), cframe = CFrame.new(0, 0.8, -0.4), color = BLACK },
+			{ name = "Stock", size = Vector3.new(0.22, 0.4, 0.8), cframe = CFrame.new(0, 0.3, 0.75), color = Color3.fromRGB(140, 25, 25) },
+		},
+	},
+
+	-- canhão de vento: cano largo branco com a turbina azul na boca
+	Hurricane = {
+		muzzle = Vector3.new(0, 0.6, -2.35),
+		sightHeight = 1.15,
+		parts = {
+			{ name = "Grip", size = Vector3.new(0.22, 0.5, 0.3), cframe = CFrame.new(0, 0, 0), color = DARK },
+			{ name = "Body", size = Vector3.new(0.6, 0.6, 1.1), cframe = CFrame.new(0, 0.5, -0.3), color = Color3.fromRGB(225, 235, 245) },
+			{ name = "Barrel", size = Vector3.new(1.5, 0.85, 0.85), cframe = CFrame.new(0, 0.6, -1.5) * ALONG_Z, color = Color3.fromRGB(235, 242, 250), shape = Enum.PartType.Cylinder },
+			{ name = "Ring", size = Vector3.new(0.12, 0.95, 0.95), cframe = CFrame.new(0, 0.6, -2.25) * ALONG_Z, color = Color3.fromRGB(110, 200, 255), material = Enum.Material.Neon, shape = Enum.PartType.Cylinder },
+			{ name = "Ring2", size = Vector3.new(0.1, 0.92, 0.92), cframe = CFrame.new(0, 0.6, -1.2) * ALONG_Z, color = Color3.fromRGB(110, 200, 255), material = Enum.Material.Neon, shape = Enum.PartType.Cylinder },
+			-- pás da turbina dentro da boca
+			{ name = "BladeA", size = Vector3.new(0.7, 0.1, 0.05), cframe = CFrame.new(0, 0.6, -2.28) * CFrame.Angles(0, 0, math.rad(45)), color = METAL, material = Enum.Material.Metal },
+			{ name = "BladeB", size = Vector3.new(0.7, 0.1, 0.05), cframe = CFrame.new(0, 0.6, -2.28) * CFrame.Angles(0, 0, math.rad(-45)), color = METAL, material = Enum.Material.Metal },
+			{ name = "Hub", size = Vector3.new(0.08, 0.2, 0.2), cframe = CFrame.new(0, 0.6, -2.3) * ALONG_Z, color = Color3.fromRGB(110, 200, 255), material = Enum.Material.Neon, shape = Enum.PartType.Cylinder },
+			{ name = "Tank", size = Vector3.new(0.8, 0.32, 0.32), cframe = CFrame.new(0, 1.0, -0.4) * ALONG_Z, color = Color3.fromRGB(110, 200, 255), material = Enum.Material.Glass, shape = Enum.PartType.Cylinder },
+			{ name = "Stock", size = Vector3.new(0.2, 0.35, 0.6), cframe = CFrame.new(0, 0.4, 0.6), color = Color3.fromRGB(225, 235, 245) },
+		},
+	},
 }
 
 local function newPart(name: string, size: Vector3, cframe: CFrame, color: Color3, anchored: boolean): Part

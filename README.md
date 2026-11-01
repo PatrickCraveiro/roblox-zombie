@@ -60,25 +60,27 @@ com todas as armas: dá pra **liberar pra sempre** com moedas e escolher com qua
 Dados de cada jogador: `src/server/PlayerDataService.luau` (DataStore `PlayerData_v1`). No Studio
 precisa do mesmo acesso às APIs do ranking; sem ele o jogo funciona, mas não salva.
 
-## Premium: Arsenal Lendário (Game Pass)
+## Armas VIP (Game Pass)
 
-Passe pago com 3 armas exclusivas, mais fortes e com mais munição que as melhores da parede:
+Cada arma VIP tem o seu passe, e o **Arsenal Lendário** é o pacote com todas (mais barato que
+separado). São as armas mais fortes do jogo:
 
-| Arma | Preço na parede | Efeito |
-|---|---|---|
-| Canhão de Confete | 2500 pts | 10 projéteis de 140 que atravessam 3 zumbis; o zumbi morto explode em confete |
-| Raio Congelante | 3000 pts | automática, 160 por tiro, pente de 100; cada tiro congela o zumbi por 2s |
-| Corrente Elétrica | 3500 pts | 600 de dano e o raio pula pra até 5 zumbis por perto |
-
-São as armas mais fortes do jogo (mais que as da Caixa Surpresa). Quem tem o passe também pode
-escolher uma delas como arma inicial no Arsenal.
+| Arma | Passe (Robux) | Preço na parede | Efeito |
+|---|---|---|---|
+| Canhão de Confete | 199 | 2500 pts | 12 projéteis de 300 que atravessam 4 zumbis; o zumbi morto explode em confete |
+| Raio Congelante | 249 | 3000 pts | automática, 350 por tiro, pente de 150; cada tiro congela o zumbi por 3s |
+| Corrente Elétrica | 299 | 3500 pts | 1500 de dano e o raio pula pra até 8 zumbis por perto |
+| Metralhadora Dragão | 399 | 4000 pts | **2000 balas no pente**, 250 por tiro, tiros de fogo; o zumbi morto vira brasa |
+| Canhão Furacão | 499 | 5000 pts | vendaval em leque que mata tudo na frente e arremessa os zumbis longe |
+| **Arsenal Lendário** (pacote) | **999** | | as 5 armas |
 
 - Ficam na **parede dourada** de cada fase: quem tem o passe compra com pontos; quem não tem vê a
   janela de compra do passe. Não saem na Caixa Surpresa.
-- No **Treinamento** ficam de graça pra todo mundo experimentar, e no lobby tem a **vitrine** do passe.
-- Configuração dos passes: `src/shared/Premium.luau`. Pra vender de verdade, crie o passe no
-  Creator Hub (create.roblox.com → seu jogo → Monetização → Passes) e cole o ID lá.
-  Com `StudioOwnsAll = true`, no Studio todo mundo testa como se tivesse o passe.
+- No **Treinamento** ficam de graça pra todo mundo experimentar, e no lobby tem a **vitrine** do
+  pacote. Quem tem o passe também pode escolher a arma VIP como arma inicial no Arsenal.
+- Configuração dos passes: `src/shared/Premium.luau`. Pra vender de verdade, crie cada passe no
+  Creator Hub (create.roblox.com → seu jogo → Monetização → Passes) com o preço da tabela e cole
+  o ID lá. Com `StudioOwnsAll = true`, no Studio todo mundo testa como se tivesse os passes.
 
 ## Ranking (salvo na nuvem da Roblox)
 

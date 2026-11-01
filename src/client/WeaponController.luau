@@ -283,7 +283,7 @@ local function fire()
 		-- onda: o servidor acha os zumbis do leque; aqui só mostra a onda na hora
 		local look = camera.CFrame.LookVector
 		table.insert(hits, { position = origin + look * def.Range })
-		Effects.wave(origin, look, def.Range, def.WaveAngle, tracerColor)
+		Effects.wave(origin, look, def.Range, def.WaveAngle, tracerColor or (if def.TracerColors then def.TracerColors[1] else nil))
 	else
 		for _ = 1, def.Pellets do
 			local direction = spreadDirection(camera.CFrame.LookVector, spread) * def.Range

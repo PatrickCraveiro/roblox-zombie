@@ -259,7 +259,7 @@ local function onFire(player: Player, origin: any, hits: any)
 		local hit = hits[1]
 		local aimPoint = typeof(hit) == "table" and hit.position
 		if typeof(aimPoint) == "Vector3" then
-			local color = if slot.upgraded then WeaponStats.upgradeColor(slot.id) else nil
+			local color = if slot.upgraded then WeaponStats.upgradeColor(slot.id) elseif def.TracerColors then def.TracerColors[1] else nil
 			fireWave(player, def, origin, aimPoint, color, applyDamage)
 		end
 		return

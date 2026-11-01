@@ -100,7 +100,8 @@ local function refresh()
 			card.button.BackgroundColor3 = BLUE
 			card.stroke.Color = if def.Pass then GOLD else Color3.fromRGB(70, 70, 80)
 		elseif def.Pass then
-			card.status.Text = "★ " .. (Premium.Passes[def.Pass] and Premium.Passes[def.Pass].Name or "VIP")
+			local pass = Premium.Passes[def.Pass]
+			card.status.Text = if pass then `★ VIP • {pass.Robux} Robux` else "★ VIP"
 			card.button.Text = "SÓ VIP"
 			card.button.BackgroundColor3 = GOLD
 			card.stroke.Color = GOLD

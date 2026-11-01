@@ -14,6 +14,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Config = require(ReplicatedStorage.Shared.Config)
 local Weapons = require(ReplicatedStorage.Shared.Weapons)
+local Premium = require(ReplicatedStorage.Shared.Premium)
 local WeaponModels = require(ReplicatedStorage.Shared.WeaponModels)
 local MapKit = require(script.Parent.MapKit)
 
@@ -313,7 +314,9 @@ local function premiumStand(parent: Instance, position: Vector3, facing: Vector3
 		box(parent, "PremiumPost", Vector3.new(0.4, 6.5, 0.4), base * CFrame.new(x, 6.65, 1.3), Color3.fromRGB(35, 28, 20), Enum.Material.Metal)
 	end
 	local sign = box(parent, "PremiumSign", Vector3.new(13, 3.6, 0.4), base * CFrame.new(0, 9.4, 1.3), Color3.fromRGB(25, 20, 12))
-	writeOn(sign, Enum.NormalId.Front, "★ ARSENAL LENDÁRIO ★\n3 armas exclusivas • mais dano e munição\nTeste grátis no Treinamento", gold, nil, 40)
+	local bundle = Premium.Passes.Arsenal
+	local count = #MapKit.premiumWeapons()
+	writeOn(sign, Enum.NormalId.Front, `★ ARSENAL LENDÁRIO ★\n{count} armas VIP: pacote por {bundle.Robux} Robux (ou cada uma separada)\nTeste grátis no Treinamento`, gold, nil, 40)
 	local light = Instance.new("PointLight")
 	light.Color = gold
 	light.Range = 16
@@ -321,10 +324,10 @@ local function premiumStand(parent: Instance, position: Vector3, facing: Vector3
 	light.Parent = sign
 
 	-- as armas deitadas em cima do balcão, com o cano pra direita de quem olha
-	for index, id in { "ConfettiCannon", "FreezeRay", "ChainLightning" } do
+	for index, id in MapKit.premiumWeapons() do
 		local model = WeaponModels.build(id, true)
-		model:ScaleTo(2)
-		model:PivotTo(base * CFrame.new((index - 2) * 4.2, 4.2, 0) * CFrame.Angles(0, math.rad(90), 0))
+		model:ScaleTo(1.5)
+		model:PivotTo(base * CFrame.new((index - 3) * 2.5, 4.1, 0) * CFrame.Angles(0, math.rad(90), 0))
 		model.Parent = parent
 	end
 end
@@ -689,7 +692,7 @@ local function trainingArmory(parent: Instance)
 	weaponRow(wallIds, RANGE_MAX_Z, -Vector3.zAxis, "ARMAS DE PAREDE", COLOR.White)
 	weaponRow(boxIds, RANGE_MIN_Z, Vector3.zAxis, "SÓ NA CAIXA SURPRESA", COLOR.Yellow)
 	-- as premium continuam a fileira da caixa: grátis aqui pra todo mundo experimentar
-	weaponRow(premiumIds, RANGE_MIN_Z, Vector3.zAxis, "★ ARSENAL LENDÁRIO (TESTE GRÁTIS)", Color3.fromRGB(255, 205, 50), #boxIds + 1)
+	weaponRow(premiumIds, RANGE_MIN_Z, Vector3.zAxis, "★ ARMAS VIP (TESTE GRÁTIS)", Color3.fromRGB(255, 205, 50), #boxIds + 1)
 
 	local machinePosition = Vector3.new(FIRING_LINE_X + 5, 0, RANGE_MIN_Z + 2.5)
 	MapKit.upgradeMachine(parent, CFrame.lookAt(machinePosition, machinePosition + Vector3.zAxis), 0)

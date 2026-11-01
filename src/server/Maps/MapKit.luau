@@ -85,6 +85,20 @@ function MapKit.writeOn(part: BasePart, face: Enum.NormalId, text: string, textC
 	return label
 end
 
+-- Armas VIP (com passe), da mais barata pra mais cara (paredes douradas, vitrine, Treinamento)
+function MapKit.premiumWeapons(): { string }
+	local ids = {}
+	for id, def in Weapons do
+		if def.Pass then
+			table.insert(ids, id)
+		end
+	end
+	table.sort(ids, function(a, b)
+		return Weapons[a].Price < Weapons[b].Price
+	end)
+	return ids
+end
+
 function MapKit.tag(instance: Instance, tagName: string): Instance
 	instance:AddTag(tagName)
 	return instance

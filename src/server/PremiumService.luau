@@ -17,8 +17,15 @@ local Remotes = ReplicatedStorage.Remotes
 
 local PremiumService = {}
 
+-- Libera o passe (e, se for pacote, os passes que vêm dentro dele)
 local function grant(player: Player, pass: Premium.Pass)
 	player:SetAttribute(pass.Attribute, true)
+	for _, key in pass.Includes or {} do
+		local included = Premium.Passes[key]
+		if included then
+			player:SetAttribute(included.Attribute, true)
+		end
+	end
 end
 
 local function checkOwnership(player: Player)
