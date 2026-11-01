@@ -1,9 +1,15 @@
 -- Galeria das Auras (lobby): em cada pedestal com a tag "AuraPedestal" (atributo AuraRank) fica
 -- um manequim com a aura daquele cargo, pra todo mundo ver o que dá pra ganhar jogando.
 -- O manequim ganha a tag "AuraMannequin" e o cliente (AuraController) põe a aura e o título.
+-- O botão "AuraPrompt" do pedestal escolhe essa aura pra usar (se o jogador já tem o cargo).
 
 local CollectionService = game:GetService("CollectionService")
 local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local PlayerDataService = require(script.Parent.PlayerDataService)
+
+local Remotes = ReplicatedStorage.Remotes
 
 local AuraService = {}
 
@@ -13,6 +19,14 @@ local function buildMannequin(pedestal: Instance)
 	local rank = pedestal:GetAttribute("AuraRank")
 	if not pedestal:IsA("BasePart") or typeof(rank) ~= "number" then
 		return
+	end
+
+	local prompt = pedestal:FindFirstChild("AuraPrompt")
+	if prompt and prompt:IsA("ProximityPrompt") then
+		prompt.Triggered:Connect(function(player)
+			local _, message = PlayerDataService.chooseRank(player, rank)
+			Remotes.Notify:FireClient(player, message)
+		end)
 	end
 
 	-- boneco liso, todo da mesma cor, como uma estátua

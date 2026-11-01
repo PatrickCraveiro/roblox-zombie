@@ -1,6 +1,7 @@
 -- Cargos de aura (Progression.Ranks): em cima de cada jogador aparece o cargo e o nome, e em
 -- volta do personagem fica a aura do cargo. Vale também pros manequins da Galeria das Auras do
--- lobby (tag "AuraMannequin", atributo AuraRank), que mostram quanto falta pra você chegar lá.
+-- lobby (tag "AuraMannequin", atributo AuraRank), que mostram quanto falta pra você chegar lá;
+-- o botão E de cada pedestal escolhe qual aura usar (entre os cargos que você já tem).
 --
 -- Tudo aqui é efeito local (cada cliente desenha as auras de todo mundo). No seu personagem o
 -- nome não aparece (primeira pessoa) e a aura sai dos pés e mais fraquinha, pra não atrapalhar
@@ -408,7 +409,7 @@ local function addTitle(aura: Aura, rank: Progression.Rank, bottomText: string):
 	return textLine(gui, 0.58, 0.42, bottomText, WHITE, Enum.Font.GothamBold)
 end
 
--- Manequim: "VOCÊ JÁ TEM!" ou quantos pontos faltam pra você chegar nesse cargo
+-- Manequim: "USANDO AGORA", "VOCÊ JÁ TEM!" ou quantos pontos faltam pra você chegar nesse cargo
 local function updateProgress(aura: Aura)
 	local label = aura.progress
 	if not label then
@@ -416,8 +417,11 @@ local function updateProgress(aura: Aura)
 	end
 	local rank = Progression.Ranks[aura.rank]
 	local points = player:GetAttribute("TotalPoints") or 0
-	if points >= rank.Points then
-		label.Text = "VOCÊ JÁ TEM!"
+	if aura.rank == player:GetAttribute("Rank") then
+		label.Text = "USANDO AGORA"
+		label.TextColor3 = Color3.fromRGB(255, 215, 60)
+	elseif aura.rank <= Progression.unlockedRank(points) then
+		label.Text = "VOCÊ JÁ TEM! (E pra usar)"
 		label.TextColor3 = Color3.fromRGB(120, 255, 140)
 	else
 		label.Text = `faltam {Progression.format(rank.Points - points)} pts`
@@ -530,6 +534,24 @@ local function sweepPlayers()
 	end
 end
 
+-- Texto do botão de cada pedestal da galeria (só pra você): usar, usando ou quanto falta
+local function updatePrompts()
+	local points = player:GetAttribute("TotalPoints") or 0
+	local current = player:GetAttribute("Rank")
+	for _, pedestal in CollectionService:GetTagged("AuraPedestal") do
+		local prompt = pedestal:FindFirstChild("AuraPrompt")
+		local index = pedestal:GetAttribute("AuraRank")
+		local rank = if typeof(index) == "number" then Progression.Ranks[index] else nil
+		if prompt and prompt:IsA("ProximityPrompt") and rank then
+			prompt.ObjectText = rank.Name
+			prompt.ActionText = if index == current
+				then "Usando agora"
+				elseif index <= Progression.unlockedRank(points) then "Usar esta aura"
+				else `Faltam {Progression.format(rank.Points - points)} pts`
+		end
+	end
+end
+
 local function setupMannequin(instance: Instance)
 	if not instance:IsA("Model") then
 		return
@@ -570,12 +592,17 @@ function AuraController.init()
 		setupMannequin(instance)
 	end
 
-	-- os manequins mostram quanto falta: atualiza quando seus pontos mudam
-	player:GetAttributeChangedSignal("TotalPoints"):Connect(function()
+	-- os manequins e os botões dos pedestais mostram o que você tem: atualiza quando muda
+	local function updateGallery()
 		for _, aura in auras do
 			updateProgress(aura)
 		end
-	end)
+		updatePrompts()
+	end
+	player:GetAttributeChangedSignal("TotalPoints"):Connect(updateGallery)
+	player:GetAttributeChangedSignal("Rank"):Connect(updateGallery)
+	CollectionService:GetInstanceAddedSignal("AuraPedestal"):Connect(updatePrompts)
+	updatePrompts()
 end
 
 return AuraController

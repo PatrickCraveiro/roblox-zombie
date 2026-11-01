@@ -7,9 +7,14 @@
 --
 --   Próxima arma do Arsenal: a mais barata que o jogador ainda não liberou com moedas.
 
+local RunService = game:GetService("RunService")
+
 local Weapons = require(script.Parent.Weapons)
 
 local Progression = {}
+
+-- No Studio dá pra usar qualquer aura na Galeria (pra testar), como os passes VIP
+Progression.StudioAllAuras = true
 
 export type Rank = {
 	Name: string,
@@ -41,6 +46,14 @@ function Progression.rankIndex(points: number): number
 		end
 	end
 	return index
+end
+
+-- Até qual cargo o jogador pode escolher a aura (o dele, ou todos no Studio)
+function Progression.unlockedRank(points: number): number
+	if Progression.StudioAllAuras and RunService:IsStudio() then
+		return #Progression.Ranks
+	end
+	return Progression.rankIndex(points)
 end
 
 -- 1234567 -> "1.234.567"

@@ -4,7 +4,8 @@
 --
 -- O cliente lê pelos atributos do jogador:
 --   Coins (número), OwnedWeapons (ids separados por vírgula), EquippedWeapon (id),
---   TotalPoints (número) e Rank (índice do cargo em Progression.Ranks)
+--   TotalPoints (número) e Rank (aura que aparece: índice em Progression.Ranks; o jogador pode
+--   escolher qualquer cargo que já alcançou)
 -- e pede pra comprar/equipar pelo RemoteFunction "ArsenalAction".
 --
 -- Se o DataStore não responder (ex: Studio sem acesso às APIs), o jogador joga normal, mas o
@@ -30,6 +31,7 @@ type Profile = {
 	owned: { [string]: boolean },
 	equipped: string,
 	totalPoints: number, -- pontos ganhos em todas as partidas (não diminui gastando)
+	chosenRank: number, -- aura escolhida na Galeria (0 = a do cargo mais alto)
 	bonusDay: number, -- dia em que já ganhou o bônus da 1ª partida
 	canSave: boolean,
 }
@@ -63,7 +65,10 @@ local function publish(player: Player, profile: Profile)
 	player:SetAttribute("OwnedWeapons", table.concat(owned, ","))
 	player:SetAttribute("EquippedWeapon", profile.equipped)
 	player:SetAttribute("TotalPoints", profile.totalPoints)
-	player:SetAttribute("Rank", Progression.rankIndex(profile.totalPoints))
+	-- aura que aparece: a escolhida (se já tem o cargo) ou a do cargo mais alto
+	local chosen = profile.chosenRank
+	local canUse = chosen >= 1 and chosen <= Progression.unlockedRank(profile.totalPoints)
+	player:SetAttribute("Rank", if canUse then chosen else Progression.rankIndex(profile.totalPoints))
 end
 
 -- Número do dia no horário de Brasília (o bônus diário vira à meia-noite daqui)
@@ -90,6 +95,7 @@ local function save(player: Player)
 		owned = owned,
 		equipped = profile.equipped,
 		totalPoints = profile.totalPoints,
+		chosenRank = profile.chosenRank,
 		bonusDay = profile.bonusDay,
 	}
 	local ok, err = pcall(function()
@@ -119,6 +125,7 @@ local function load(player: Player)
 		owned = { [Config.StartingWeapon] = true },
 		equipped = Config.StartingWeapon,
 		totalPoints = readNumber(data, "totalPoints"),
+		chosenRank = readNumber(data, "chosenRank"),
 		bonusDay = readNumber(data, "bonusDay"),
 		canSave = canSave,
 	}
@@ -212,6 +219,23 @@ function PlayerDataService.getStartingWeapon(player: Player): string
 	return Config.StartingWeapon
 end
 
+-- Escolhe qual aura usar (qualquer cargo que o jogador já alcançou)
+function PlayerDataService.chooseRank(player: Player, index: number): (boolean, string)
+	local profile = profiles[player]
+	local rank = Progression.Ranks[index]
+	if not profile or not rank then
+		return false, "Cargo inválido"
+	end
+	if index > Progression.unlockedRank(profile.totalPoints) then
+		return false, `{rank.Name}: faltam {Progression.format(rank.Points - profile.totalPoints)} pontos`
+	end
+	-- escolheu o cargo mais alto: volta pro automático (troca sozinho quando subir)
+	profile.chosenRank = if index == Progression.rankIndex(profile.totalPoints) then 0 else index
+	publish(player, profile)
+	task.spawn(save, player)
+	return true, `Aura trocada: {rank.Name}`
+end
+
 -- Fim da partida: dá as moedas (com os bônus) e soma os pontos pro cargo de aura
 function PlayerDataService.finishMatch(player: Player, baseCoins: number, points: number, inGroup: boolean): MatchReward?
 	local profile = profiles[player]
@@ -242,6 +266,9 @@ function PlayerDataService.finishMatch(player: Player, baseCoins: number, points
 	profile.coins += coins
 	profile.totalPoints += math.max(math.floor(points), 0)
 	local newRank = Progression.rankIndex(profile.totalPoints)
+	if newRank > oldRank then
+		profile.chosenRank = 0 -- subiu de cargo: já mostra a aura nova (dá pra voltar na Galeria)
+	end
 	publish(player, profile)
 	task.spawn(save, player)
 

@@ -73,6 +73,11 @@ em cima do nome do jogador (no lugar do nome padrão) e ele ganha uma **aura** e
 sobe de cargo, aparece um aviso pra ele e pra todo mundo do servidor. No lobby, a **Galeria das Auras**
 (lado direito da praça) tem um manequim com cada aura e mostra quanto falta pra você chegar lá.
 
+**Escolher a aura**: na Galeria, aperte **E** no pedestal de qualquer cargo que você já tem pra usar
+aquela aura (o cargo e a aura escolhida aparecem em cima do seu nome). Quando sobe de cargo, troca
+sozinho pra aura nova (dá pra voltar). No Studio dá pra usar todas, pra testar
+(`Progression.StudioAllAuras`).
+
 | Cargo | Pontos | Aura |
 |---|---|---|
 | Iniciante | 0 | folhinhas voando em volta |

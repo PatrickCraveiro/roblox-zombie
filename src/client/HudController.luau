@@ -691,10 +691,13 @@ function HudController.init()
 		local nextText = if nextRank
 			then `  →  próximo: {nextRank.Name} (faltam {Progression.format(nextRank.Points - points)} pts)`
 			else "  (cargo máximo!)"
-		local rankLine = `Cargo: <font color="#{rank.Color:ToHex()}"><b>{rank.Name}</b></font>{nextText}`
+		-- escolheu outra aura na Galeria
+		local chosen = Progression.Ranks[player:GetAttribute("Rank") or index]
+		local auraText = if chosen and chosen ~= rank then `  •  aura: {chosen.Name}` else ""
+		local rankLine = `Cargo: <font color="#{rank.Color:ToHex()}"><b>{rank.Name}</b></font>{auraText}{nextText}`
 		progressLabel.Text = weaponLine .. "\n" .. rankLine
 	end
-	for _, attribute in { "Coins", "OwnedWeapons", "TotalPoints" } do
+	for _, attribute in { "Coins", "OwnedWeapons", "TotalPoints", "Rank" } do
 		player:GetAttributeChangedSignal(attribute):Connect(updateProgress)
 	end
 	updateProgress()

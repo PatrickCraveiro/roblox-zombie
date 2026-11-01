@@ -447,6 +447,14 @@ local function auraGallery(parent: Instance)
 		local pedestal = box(parent, "AuraPedestal", Vector3.new(5, 1.5, 5), CFrame.lookAt(position, position - Vector3.xAxis), Color3.fromRGB(45, 40, 55), Enum.Material.Marble)
 		pedestal:SetAttribute("AuraRank", index)
 		tag(pedestal, "AuraPedestal")
+		-- E pra usar essa aura (o cliente troca o texto: "Usar", "Usando agora" ou quanto falta)
+		local prompt = Instance.new("ProximityPrompt")
+		prompt.Name = "AuraPrompt"
+		prompt.ActionText = "Usar esta aura"
+		prompt.ObjectText = rank.Name
+		prompt.MaxActivationDistance = 7
+		prompt.RequiresLineOfSight = false
+		prompt.Parent = pedestal
 		box(parent, "PedestalTrim", Vector3.new(5.1, 0.2, 5.1), pedestal.CFrame * CFrame.new(0, 0.75, 0), rank.Color, Enum.Material.Neon)
 		local requirement = if rank.Points == 0 then "todo mundo começa aqui" else `{Progression.format(rank.Points)} pontos`
 		writeOn(pedestal, Enum.NormalId.Front, `{index}. {string.upper(rank.Name)}\n{requirement}`, rank.Color, nil, 40)
