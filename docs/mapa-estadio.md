@@ -23,8 +23,8 @@ do gramado (é uma porta com o atributo `OpenFrom`).
 
 | Área | O que tem |
 |---|---|
-| Entrada | catracas, lanchonete (cardápio, pipoqueira, refrigerante, carrinho de cachorro-quente, mesinhas), Pistola e SMG, Colete Blindado |
-| Vestiário da casa (verde) | armários numerados, camisas penduradas, banco, chuveiros (dois pingando), toalhas, lousa tática, maca, saco de bolas, bebedouro, Escopeta |
+| Entrada | saguão com parede de vidro pro gramado (vê o campo, não passa), 12 catracas detalhadas com pórtico e luzes, bilheteria, loja do torcedor, taça na vitrine, escudo no chão, bandeirinhas, mirante com bancos, lanchonete, Pistola e SMG, Colete Blindado |
+| Vestiário da casa (verde) | armários numerados, camisas, banco, banheiro fechado (chuveiros com boxes e sanitários com cabines, pias e espelho), lousa tática, maca, saco de bolas, bebedouro, Escopeta |
 | Vestiário visitante (azul) | igual ao da casa, Revólver, Munição |
 | Arquibancada norte | corredor plano, degraus com cadeiras coloridas, cabine de imprensa, faixas da torcida, Fuzil e Rifle de Precisão no alambrado, Mão Rápida |
 | Gramado | listras, linhas do campo, gols com rede, bandeirinhas, bancos de reservas, placar eletrônico, 4 refletores, túneis nos cantos (zumbis), Escopeta Automática |

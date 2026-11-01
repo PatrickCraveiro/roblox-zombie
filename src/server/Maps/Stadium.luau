@@ -122,6 +122,39 @@ local function door(parent: Instance, x: number, z: number, zones: string, price
 	CollectionService:AddTag(part, "Door")
 end
 
+-- Parede de vidro ao longo de X (mureta verde, vidrão e concreto em cima), com vãos de porta.
+-- Dá pra ver através, mas não passar (nem atirar)
+local function glassWall(parent: Instance, xA: number, xB: number, z: number, doorsAt: { number }?)
+	local function segment(a: number, b: number)
+		if b - a < 0.05 then
+			return
+		end
+		local cx, length = (a + b) / 2, b - a
+		box(parent, "GlassBase", Vector3.new(length, 2.5, WALL), CFrame.new(cx, 1.25, z), COLOR.Green, Enum.Material.Concrete)
+		box(parent, "BigGlass", Vector3.new(length, 8.5, 0.4), CFrame.new(cx, 6.75, z), Color3.fromRGB(160, 190, 210), Enum.Material.Glass, { Transparency = 0.55 })
+		box(parent, "Wall", Vector3.new(length, HEIGHT - 11, WALL), CFrame.new(cx, 12.5, z), COLOR.Concrete, Enum.Material.Concrete)
+	end
+	local doors = table.clone(doorsAt or {})
+	table.sort(doors)
+	local cursor = xA
+	for _, at in doors do
+		segment(cursor, at - DOOR_WIDTH / 2)
+		box(parent, "Wall", Vector3.new(DOOR_WIDTH, HEIGHT - DOOR_HEIGHT, WALL), CFrame.new(at, (HEIGHT + DOOR_HEIGHT) / 2, z), COLOR.Concrete, Enum.Material.Concrete)
+		cursor = at + DOOR_WIDTH / 2
+	end
+	segment(cursor, xB)
+	-- montantes do vidro
+	for x = xA + 8, xB - 4, 8 do
+		local nearDoor = false
+		for _, at in doors do
+			nearDoor = nearDoor or math.abs(x - at) < DOOR_WIDTH / 2 + 0.5
+		end
+		if not nearDoor then
+			box(parent, "Mullion", Vector3.new(0.4, 8.5, 0.6), CFrame.new(x, 6.75, z), COLOR.Dark, Enum.Material.Metal)
+		end
+	end
+end
+
 local function floor(parent: Instance, xA: number, zA: number, xB: number, zB: number, color: Color3, mat: Enum.Material, lift: number?)
 	box(parent, "Floor", Vector3.new(xB - xA, 1, zB - zA), CFrame.new((xA + xB) / 2, -0.5 + (lift or 0), (zA + zB) / 2), color, mat)
 end
@@ -199,7 +232,7 @@ local ROTATE_UP = CFrame.Angles(0, 0, math.rad(90)) -- cilindro em pé
 -- ===================== Áreas =====================
 
 local function buildStructure(parent: Instance)
-	floor(parent, -XO, ZS, XO, ZF, Color3.fromRGB(150, 148, 142), Enum.Material.Concrete) -- Entrada
+	floor(parent, -XO, ZS, XO, ZF, Color3.fromRGB(215, 208, 190), MAT.Tiles) -- Entrada
 	floor(parent, -XO, ZN, XO, ZC, Color3.fromRGB(130, 130, 125), Enum.Material.Concrete) -- Arquibancada
 	floor(parent, -XO, ZC, -XI, ZS, Color3.fromRGB(215, 215, 210), MAT.Tiles) -- Vestiário da casa
 	floor(parent, XI, ZC, XO, ZS, Color3.fromRGB(215, 215, 210), MAT.Tiles) -- Vestiário visitante
@@ -226,9 +259,9 @@ local function buildStructure(parent: Instance)
 		end
 	end
 
-	-- parede sul do gramado (Entrada e camarotes) e as salas dos camarotes
-	wall(parent, -XI, ZS, -BOX_X, ZS, HEIGHT, nil, nil, { -60 })
-	wall(parent, BOX_X, ZS, XI, ZS, HEIGHT)
+	-- parede sul do gramado: vidro (do saguão das catracas já dá pra ver o campo) e os camarotes
+	glassWall(parent, -XI, -BOX_X, ZS, { -60 })
+	glassWall(parent, BOX_X, XI, ZS)
 	wall(parent, -BOX_X, ZS, -BOX_X, BOX_Z, HEIGHT)
 	wall(parent, BOX_X, ZS, BOX_X, BOX_Z, HEIGHT)
 	wall(parent, -BOX_X, BOX_Z, BOX_X, BOX_Z, HEIGHT)
@@ -247,14 +280,100 @@ end
 
 -- Entrada: catracas, lanchonete e o começo da partida
 local function buildEntrada(parent: Instance)
-	-- catracas (dá pra passar entre elas)
-	for x = -48, 48, 8 do
-		block(parent, "Turnstile", Vector3.new(1, 3, 1.4), x, 92, Color3.fromRGB(150, 150, 155), Enum.Material.Metal)
-		block(parent, "TurnstileTop", Vector3.new(1.2, 0.3, 1.6), x, 92, COLOR.Dark, nil, nil, 3)
-		box(parent, "TurnstileArm", Vector3.new(2.6, 0.2, 0.2), CFrame.new(x + 1.8, 2.4, 92), Color3.fromRGB(200, 200, 205), Enum.Material.Metal, { CanCollide = false })
+	local decor = { CanCollide = false, CanQuery = false }
+
+	-- catracas de verdade: gabinete de inox, tampo de vidro, leitor de ingresso com luz (verde =
+	-- liberada, vermelha = fechada) e o braço; pórtico verde em cima com a luz de cada passagem
+	box(parent, "Walkway", Vector3.new(122, 0.06, 8), CFrame.new(0, 0.03, 92), COLOR.Green, nil, decor)
+	for k = 0, 11 do
+		local x = -55 + k * 10
+		local open = k % 4 ~= 3
+		local signal = if open then Color3.fromRGB(60, 255, 90) else COLOR.Red
+		block(parent, "Turnstile", Vector3.new(1.4, 3.2, 3), x, 92, Color3.fromRGB(205, 205, 210), Enum.Material.Metal)
+		block(parent, "TurnstileTop", Vector3.new(1.5, 0.15, 3.1), x, 92, Color3.fromRGB(20, 40, 70), Enum.Material.Glass, nil, 3.2)
+		block(parent, "TicketReader", Vector3.new(0.6, 0.35, 0.8), x, 93, COLOR.Black, nil, nil, 3.35)
+		block(parent, "ReaderLight", Vector3.new(0.3, 0.1, 0.3), x, 93, signal, Enum.Material.Neon, decor, 3.7)
+		box(parent, "TurnstileHub", Vector3.new(0.5, 0.7, 0.7), CFrame.new(x + 0.95, 2.5, 92), Color3.fromRGB(170, 170, 175), Enum.Material.Metal, { Shape = Enum.PartType.Cylinder })
+		box(parent, "TurnstileArm", Vector3.new(2.6, 0.18, 0.18), CFrame.new(x + 2.4, 2.5, 92), Color3.fromRGB(220, 220, 225), Enum.Material.Metal, { CanCollide = false })
+		if k < 11 then
+			block(parent, "LaneLight", Vector3.new(1.2, 1.2, 0.3), x + 5, 92, signal, Enum.Material.Neon, decor, 8.3)
+		end
 	end
-	sign(parent, Vector3.new(0, 11, 92), Vector3.zAxis, Vector2.new(20, 2.4), "CATRACAS", COLOR.Dark, COLOR.Yellow)
+	for _, x in { -62, 62 } do
+		block(parent, "GantryPost", Vector3.new(1.4, 9.5, 1.4), x, 92, COLOR.Green, Enum.Material.Metal)
+	end
+	block(parent, "GantryBeam", Vector3.new(126, 1.4, 1.4), 0, 92, COLOR.Green, Enum.Material.Metal, nil, 9.5)
+	local gantrySign = box(parent, "GantrySign", Vector3.new(44, 2.6, 0.4), CFrame.new(0, 12.2, 92), COLOR.Yellow, nil, decor)
+	writeOn(gantrySign, Enum.NormalId.Front, "ACESSO AO ESTÁDIO", COLOR.Green, nil, 40)
+	writeOn(gantrySign, Enum.NormalId.Back, "ACESSO AO ESTÁDIO", COLOR.Green, nil, 40)
 	sign(parent, Vector3.new(0, 11, ZF - 1.2), -Vector3.zAxis, Vector2.new(50, 3), "BEM-VINDO AO ESTÁDIO GOL DE PLACA", COLOR.Green, COLOR.Yellow)
+
+	-- escudo pintado no chão do saguão
+	box(parent, "EmblemRing", Vector3.new(0.05, 14, 14), CFrame.new(0, 0.03, 82) * ROTATE_UP, COLOR.Yellow, nil, { CanCollide = false, CanQuery = false, Shape = Enum.PartType.Cylinder })
+	box(parent, "Emblem", Vector3.new(0.06, 12, 12), CFrame.new(0, 0.04, 82) * ROTATE_UP, COLOR.Green, nil, { CanCollide = false, CanQuery = false, Shape = Enum.PartType.Cylinder })
+	local emblemText = box(parent, "EmblemText", Vector3.new(10, 0.05, 4), CFrame.lookAt(Vector3.new(0, 0.09, 82), Vector3.new(0, 0.09, 70)), COLOR.White, nil, { Transparency = 1, CanCollide = false, CanQuery = false })
+	writeOn(emblemText, Enum.NormalId.Top, "GOL DE PLACA", COLOR.Yellow)
+
+	-- parede da fachada pintada (faixa verde e amarela), sem tampar os portões das barricadas
+	for _, range in { { -127, -63 }, { -57, 57 }, { 63, 127 } } do
+		local cx, length = (range[1] + range[2]) / 2, range[2] - range[1]
+		box(parent, "WallPaint", Vector3.new(length, 3, 0.2), CFrame.new(cx, 1.5, ZF - 1.1), COLOR.Green, nil, decor)
+		box(parent, "WallStripe", Vector3.new(length, 0.5, 0.2), CFrame.new(cx, 3.25, ZF - 1.1), COLOR.Yellow, nil, decor)
+	end
+
+	-- bilheteria: três guichês na fachada
+	for index, x in { 78, 90, 102 } do
+		box(parent, "TicketWindow", Vector3.new(6, 3.5, 0.2), CFrame.new(x, 6, ZF - 1.1), Color3.fromRGB(150, 185, 205), Enum.Material.Glass, { Transparency = 0.3, CanCollide = false })
+		box(parent, "TicketLedge", Vector3.new(7, 0.3, 1.2), CFrame.new(x, 3.65, ZF - 1.6), Color3.fromRGB(200, 200, 205), Enum.Material.Metal)
+		sign(parent, Vector3.new(x, 8.6, ZF - 1.2), -Vector3.zAxis, Vector2.new(5, 1), `GUICHÊ {index}`, COLOR.Dark, COLOR.White)
+	end
+	sign(parent, Vector3.new(90, 11, ZF - 1.2), -Vector3.zAxis, Vector2.new(30, 2.4), "BILHETERIA", COLOR.Yellow, COLOR.Green)
+
+	-- loja do torcedor: balcão com cachecóis e uma arara de camisas
+	block(parent, "ShopCounter", Vector3.new(10, 3.2, 2.4), 88, 76.5, COLOR.Green)
+	for index = 0, 2 do
+		box(parent, "Scarf", Vector3.new(2.6, 0.2, 0.6), CFrame.new(84.5 + index * 3.5, 3.3, 76.5) * CFrame.Angles(0, 0.3, 0), if index % 2 == 0 then COLOR.Yellow else COLOR.Green, Enum.Material.Fabric, decor)
+	end
+	for _, x in { 83.5, 92.5 } do
+		block(parent, "RackPost", Vector3.new(0.2, 7, 0.2), x, 72.5, COLOR.Dark, Enum.Material.Metal)
+	end
+	block(parent, "ClothesRail", Vector3.new(9.2, 0.2, 0.2), 88, 72.5, COLOR.Dark, Enum.Material.Metal, nil, 7)
+	for index = 0, 3 do
+		local shirtColor = if index % 2 == 0 then COLOR.Green else COLOR.Yellow
+		local shirt = box(parent, "Jersey", Vector3.new(1.8, 2.2, 0.2), CFrame.new(84.5 + index * 2.4, 5.6, 72.5), shirtColor, Enum.Material.Fabric, decor)
+		writeOn(shirt, Enum.NormalId.Back, tostring(({ 10, 9, 7, 11 })[index + 1]), if index % 2 == 0 then COLOR.Yellow else COLOR.Green, nil, 40)
+	end
+	sign(parent, Vector3.new(88, 9.5, 72.3), Vector3.zAxis, Vector2.new(12, 1.8), "LOJA DO TORCEDOR", COLOR.Yellow, COLOR.Green)
+
+	-- taça numa vitrine
+	block(parent, "TrophyStand", Vector3.new(3, 3, 3), 45, 80, Color3.fromRGB(70, 45, 30), Enum.Material.Wood)
+	block(parent, "TrophyGlass", Vector3.new(3, 4, 3), 45, 80, Color3.fromRGB(200, 225, 240), Enum.Material.Glass, { Transparency = 0.7 }, 3)
+	local gold = Color3.fromRGB(240, 190, 50)
+	for _, piece in { { 0.4, 1.2, 3.2 }, { 1, 0.4, 3.6 }, { 1.4, 1.4, 4.6 } } do
+		box(parent, "Trophy", Vector3.new(piece[1], piece[2], piece[2]), CFrame.new(45, piece[3] + piece[1] / 2, 80) * ROTATE_UP, gold, Enum.Material.Metal, { Shape = Enum.PartType.Cylinder, Reflectance = 0.3 })
+	end
+	sign(parent, Vector3.new(45, 1.5, 81.65), Vector3.zAxis, Vector2.new(2.6, 0.8), "CAMPEÃO 1950", gold, COLOR.Black)
+
+	-- bandeirinhas atravessando o saguão
+	box(parent, "BuntingRope", Vector3.new(240, 0.08, 0.08), CFrame.new(0, 12.8, 86), COLOR.White, nil, decor)
+	for index = 0, 29 do
+		box(parent, "Bunting", Vector3.new(1.4, 1.4, 0.05), CFrame.new(-116 + index * 8, 12.1, 86) * CFrame.Angles(0, 0, math.rad(45)), if index % 2 == 0 then COLOR.Green else COLOR.Yellow, nil, decor)
+	end
+
+	-- mirante: bancos de frente pro vidro pra ver o campo
+	for _, x in { -80, -45, 45, 70 } do
+		box(parent, "ViewBench", Vector3.new(6, 0.4, 1.6), CFrame.new(x, 1.6, 64), COLOR.Wood, Enum.Material.WoodPlanks)
+		for _, dx in { -2.5, 2.5 } do
+			block(parent, "ViewBenchLeg", Vector3.new(0.4, 1.4, 1.4), x + dx, 64, COLOR.Dark)
+		end
+	end
+
+	-- cartazes dos ídolos na parede de fora dos camarotes
+	for index, text in { "CRAQUE DA\nGALERA", "NOSSO ÍDOLO\nCAMISA 10" } do
+		local x = if index == 1 then -18 else 18
+		sign(parent, Vector3.new(x, 6, BOX_Z + 1.2), Vector3.zAxis, Vector2.new(8, 5), text, if index == 1 then COLOR.Green else COLOR.Yellow, if index == 1 then COLOR.Yellow else COLOR.Green)
+	end
+	sign(parent, Vector3.new(0, 11, BOX_Z + 1.2), Vector3.zAxis, Vector2.new(22, 2.4), "CAMAROTES VIP", COLOR.Dark, COLOR.Yellow)
 
 	-- lanchonete encostada na fachada
 	block(parent, "SnackCounter", Vector3.new(30, 3.4, 2.4), -97, 97.5, COLOR.Red)
@@ -289,6 +408,92 @@ local function buildEntrada(parent: Instance)
 	lights(parent, -XO, ZS, XO, ZF, Color3.fromRGB(235, 240, 255))
 end
 
+-- Banheiro do vestiário, encostado na parede de fora: dois cômodos de paredes altas (chuveiros e
+-- sanitários), cada um com uma porta pro corredor do vestiário
+local function buildBathroom(parent: Instance, side: number, color: Color3)
+	local outer = side * (XO - WALL / 2) -- face de dentro da parede de fora
+	local divider = side * 112 -- parede que separa o banheiro do corredor
+	local zA, zMid, zB = -52, -38, -24
+	local tile = Color3.fromRGB(235, 240, 245)
+	local metal = Color3.fromRGB(180, 180, 185)
+	local decor = { CanCollide = false, CanQuery = false }
+	local function x(d: number): number -- "d" studs da parede de fora pra dentro
+		return outer - side * d
+	end
+	local function slab(name: string, xA: number, xB: number, z1: number, z2: number, bottom: number, top: number, c: Color3, mat: Enum.Material?)
+		box(parent, name, Vector3.new(math.abs(xB - xA), top - bottom, math.abs(z2 - z1)), CFrame.new((xA + xB) / 2, (bottom + top) / 2, (z1 + z2) / 2), c, mat or MAT.Tiles)
+	end
+
+	floor(parent, math.min(outer, divider), zA, math.max(outer, divider), zB, Color3.fromRGB(170, 205, 225), MAT.Tiles, 0.05)
+	-- paredes: norte, meio e sul (de azulejo) e a divisória pro corredor com as duas portas
+	for _, z in { zA, zMid, zB } do
+		slab("BathWall", side * XO, divider, z - 0.5, z + 0.5, 0, HEIGHT, tile)
+	end
+	for _, segment in { { zA, -47.5, 0 }, { -42.5, -33.5, 0 }, { -28.5, zB, 0 }, { -47.5, -42.5, 8 }, { -33.5, -28.5, 8 } } do
+		slab("BathWall", divider - 0.5, divider + 0.5, segment[1], segment[2], segment[3], HEIGHT, tile)
+	end
+	-- faixa da cor do time e placas em cima das portas (do lado do corredor)
+	slab("BathStripe", divider - side * 0.6, divider - side * 0.5, zA, zB, 8.5, 9.2, color, Enum.Material.SmoothPlastic)
+	for _, info in { { -45, "CHUVEIROS" }, { -31, "SANITÁRIOS" } } do
+		sign(parent, Vector3.new(divider - side * 0.7, 10.3, info[1]), Vector3.new(-side, 0, 0), Vector2.new(6, 1.4), info[2], Color3.fromRGB(40, 110, 160), COLOR.White)
+	end
+
+	-- CHUVEIROS: três boxes encostados na parede norte, duas duchas pingando, ralos e toalhas
+	for d = 5, 10, 5 do
+		slab("ShowerStall", x(d) - 0.15, x(d) + 0.15, zA + 0.5, zA + 5.5, 0, 7, tile)
+	end
+	for index, d in { 2.5, 7.5, 12.5 } do
+		local headZ = zA + 1.4
+		block(parent, "ShowerPipe", Vector3.new(0.25, 3, 0.25), x(d), zA + 0.7, metal, Enum.Material.Metal, nil, 6.5)
+		box(parent, "ShowerArm", Vector3.new(0.2, 0.2, 1), CFrame.new(x(d), 9.3, zA + 1), metal, Enum.Material.Metal)
+		local head = box(parent, "ShowerHead", Vector3.new(0.25, 1.1, 1.1), CFrame.new(x(d), 9.1, headZ) * ROTATE_UP, Color3.fromRGB(205, 205, 210), Enum.Material.Metal, { Shape = Enum.PartType.Cylinder })
+		if index ~= 2 then
+			local water = Instance.new("ParticleEmitter")
+			water.Color = ColorSequence.new(Color3.fromRGB(180, 220, 255))
+			water.Transparency = NumberSequence.new(0.4)
+			water.Size = NumberSequence.new(0.12)
+			water.Rate = 40
+			water.Lifetime = NumberRange.new(0.8)
+			water.Speed = NumberRange.new(10)
+			water.SpreadAngle = Vector2.new(10, 10)
+			water.EmissionDirection = Enum.NormalId.Left -- o cilindro está deitado: Left aponta pro chão
+			water.Parent = head
+		end
+		block(parent, "ShowerTap", Vector3.new(0.6, 0.6, 0.3), x(d), zA + 0.65, metal, Enum.Material.Metal, decor, 4.2)
+		box(parent, "Drain", Vector3.new(0.05, 0.8, 0.8), CFrame.new(x(d), 0.09, zA + 3) * ROTATE_UP, COLOR.Dark, nil, { Shape = Enum.PartType.Cylinder, CanCollide = false })
+		box(parent, "Towel", Vector3.new(1.2, 1.8, 0.2), CFrame.new(x(d), 5, zMid - 0.65), ({ COLOR.Red, COLOR.Yellow, color })[index], Enum.Material.Fabric, decor)
+	end
+	slab("ShowerBench", x(4.5), x(10.5), zMid - 3.2, zMid - 1.8, 1.4, 1.8, COLOR.Wood, Enum.Material.WoodPlanks)
+
+	-- SANITÁRIOS: três cabines encostadas na parede de fora (com vaso e porta, uma entreaberta)
+	-- e as pias com espelho na parede do meio
+	for _, z in { -33.3, -28.6 } do
+		slab("ToiletStall", x(0), x(5), z - 0.15, z + 0.15, 0, 7, color:Lerp(COLOR.White, 0.5), Enum.Material.SmoothPlastic)
+	end
+	for index, z in { -35.65, -30.95, -26.3 } do
+		slab("ToiletTank", x(0), x(0.8), z - 0.9, z + 0.9, 2, 3.8, COLOR.White, Enum.Material.SmoothPlastic)
+		box(parent, "Toilet", Vector3.new(1.4, 1.6, 1.6), CFrame.new(x(1.8), 0.7, z) * ROTATE_UP, COLOR.White, nil, { Shape = Enum.PartType.Cylinder })
+		local hinge = CFrame.new(x(5), 3.5, z + 2) * CFrame.Angles(0, if index == 2 then side * math.rad(-40) else 0, 0)
+		box(parent, "StallDoor", Vector3.new(0.2, 6, 4), hinge * CFrame.new(0, 0, -2), color:Lerp(COLOR.White, 0.3), Enum.Material.SmoothPlastic, decor)
+	end
+	slab("SinkCounter", x(8), x(14), zMid + 0.5, zMid + 2.1, 2.8, 3.2, Color3.fromRGB(60, 60, 65), Enum.Material.Marble)
+	for _, d in { 9.5, 12.5 } do
+		box(parent, "Sink", Vector3.new(0.3, 1.2, 1.2), CFrame.new(x(d), 3.25, zMid + 1.3) * ROTATE_UP, COLOR.White, nil, { Shape = Enum.PartType.Cylinder })
+		block(parent, "Faucet", Vector3.new(0.2, 0.6, 0.2), x(d), zMid + 0.75, metal, Enum.Material.Metal, decor, 3.2)
+	end
+	box(parent, "Mirror", Vector3.new(math.abs(x(14) - x(8)) - 0.4, 3, 0.1), CFrame.new(x(11), 6.3, zMid + 0.56), Color3.fromRGB(190, 200, 205), Enum.Material.Glass, { Reflectance = 0.6, CanCollide = false })
+	block(parent, "TowelDispenser", Vector3.new(1, 1.4, 0.5), x(14.3), zMid + 0.75, COLOR.White, nil, decor, 4.5)
+
+	-- uma luz em cada cômodo
+	for _, z in { (zA + zMid) / 2, (zMid + zB) / 2 } do
+		local lamp = box(parent, "CeilingLight", Vector3.new(3, 0.3, 1.2), CFrame.new(x(7.5), HEIGHT - 0.15, z), Color3.fromRGB(240, 245, 255), Enum.Material.Neon, { CastShadow = false })
+		local light = Instance.new("PointLight")
+		light.Range = 18
+		light.Brightness = 1.2
+		light.Parent = lamp
+	end
+end
+
 -- Vestiário (side = -1 casa, à esquerda; 1 visitante, à direita): armários, bancos, camisas,
 -- chuveiros, lousa tática, maca e saco de bolas
 local function buildLockerRoom(parent: Instance, side: number, color: Color3, title: string)
@@ -317,33 +522,7 @@ local function buildLockerRoom(parent: Instance, side: number, color: Color3, ti
 	end
 	sign(parent, Vector3.new(inner + side * 0.2, 10.5, 32), into, Vector2.new(26, 2.6), title, color, COLOR.White)
 
-	-- chuveiros: piso azulejado, divisórias, duchas (duas pingando) e toalhas
-	floor(parent, math.min(inner, inner + side * 14), ZC + 1, math.max(inner, inner + side * 14), -32, COLOR.Tiles, MAT.Tiles, 0.05)
-	for k = 0, 4 do
-		local z = -58 + k * 6
-		box(parent, "ShowerWall", Vector3.new(3, 6.5, 0.3), CFrame.new(inner + side * 1.5, 3.25, z), COLOR.White, MAT.Tiles)
-	end
-	for k = 0, 3 do
-		local z = -55 + k * 6
-		block(parent, "ShowerPipe", Vector3.new(0.25, 3, 0.25), inner + side * 0.3, z, Color3.fromRGB(170, 170, 175), Enum.Material.Metal, nil, 6.5)
-		box(parent, "ShowerArm", Vector3.new(1, 0.2, 0.2), CFrame.new(inner + side * 0.8, 9.3, z), Color3.fromRGB(170, 170, 175), Enum.Material.Metal)
-		local head = box(parent, "ShowerHead", Vector3.new(0.25, 1.1, 1.1), CFrame.new(inner + side * 1.3, 9.1, z) * ROTATE_UP, Color3.fromRGB(200, 200, 205), Enum.Material.Metal, { Shape = Enum.PartType.Cylinder })
-		if k % 2 == 0 then
-			local water = Instance.new("ParticleEmitter")
-			water.Color = ColorSequence.new(Color3.fromRGB(180, 220, 255))
-			water.Transparency = NumberSequence.new(0.4)
-			water.Size = NumberSequence.new(0.12)
-			water.Rate = 40
-			water.Lifetime = NumberRange.new(0.8)
-			water.Speed = NumberRange.new(10)
-			water.SpreadAngle = Vector2.new(10, 10)
-			water.EmissionDirection = Enum.NormalId.Left -- o cilindro está deitado de lado: Left aponta pro chão
-			water.Parent = head
-		end
-		box(parent, "Drain", Vector3.new(0.05, 0.8, 0.8), CFrame.new(inner + side * 2, 0.07, z) * ROTATE_UP, COLOR.Dark, nil, { Shape = Enum.PartType.Cylinder, CanCollide = false })
-		box(parent, "Towel", Vector3.new(0.2, 1.8, 1.1), CFrame.new(inner + side * 0.2, 5, z + 2.2), ({ COLOR.Red, COLOR.Yellow, COLOR.Blue, COLOR.White })[k + 1], Enum.Material.Fabric, { CanCollide = false })
-	end
-	sign(parent, Vector3.new(inner + side * 0.2, 11, -46), into, Vector2.new(14, 2.2), "CHUVEIROS", Color3.fromRGB(40, 110, 160), COLOR.White)
+	buildBathroom(parent, side, color)
 
 	-- lousa tática na parede do fundo (perto da porta)
 	local board = sign(parent, Vector3.new(side * 96, 6, ZS - 1.2), -Vector3.zAxis, Vector2.new(6, 3.6), "X   O   X\n    →\nO   X   O", Color3.fromRGB(30, 90, 50), COLOR.White)
