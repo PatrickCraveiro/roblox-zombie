@@ -369,12 +369,19 @@ local function arsenalKiosk(parent: Instance, position: Vector3, facing: Vector3
 	end
 end
 
--- Quadro do ranking (o RankingService preenche as listas "List_<Best|Total>_<stat>" e o "Status")
+-- Quadro do ranking: 6 cartões (recorde em uma partida / total geral × abates, headshots, pontos),
+-- cada um com 5 linhas: posição, foto do jogador, nome inteiro e o valor. O RankingService
+-- preenche as linhas ("List_<Best|Total>_<stat>" → "Row1".."Row5" com "Avatar", "PlayerName" e
+-- "Score") e o "Status".
+local RANKING_ROWS = 5
+local RANKING_PIXELS = 25 -- pixels por stud (o quadro tem 54x28 studs = 1350x700 pixels)
+local PODIUM_COLORS = { Color3.fromRGB(255, 205, 50), Color3.fromRGB(205, 210, 220), Color3.fromRGB(215, 140, 80) }
+
 local function rankingBoard(parent: Instance, position: Vector3, facing: Vector3)
-	local width, height = 34, 15
+	local width, height = 54, 28
 	local base = CFrame.lookAt(position, position + facing)
 	for _, x in { -width / 2 + 1, width / 2 - 1 } do
-		box(parent, "RankingPost", Vector3.new(0.8, height + 2, 0.8), base * CFrame.new(x, (height + 2) / 2, 0.6), COLOR.DarkMetal, Enum.Material.Metal)
+		box(parent, "RankingPost", Vector3.new(1, height + 2, 1), base * CFrame.new(x, (height + 2) / 2, 0.7), COLOR.DarkMetal, Enum.Material.Metal)
 	end
 	local board = box(parent, "RankingBoard", Vector3.new(width, height, 0.6), base * CFrame.new(0, 2 + height / 2, 0), Color3.fromRGB(18, 22, 30))
 	tag(board, "RankingBoard")
@@ -383,40 +390,96 @@ local function rankingBoard(parent: Instance, position: Vector3, facing: Vector3
 	local gui = Instance.new("SurfaceGui")
 	gui.Face = Enum.NormalId.Front
 	gui.SizingMode = Enum.SurfaceGuiSizingMode.PixelsPerStud
-	gui.PixelsPerStud = 30
+	gui.PixelsPerStud = RANKING_PIXELS
 	gui.LightInfluence = 0
 	gui.Parent = board
-	local function label(name: string, x: number, y: number, w: number, h: number, text: string, color: Color3, font: Enum.Font, alignLeft: boolean?)
-		local textLabel = Instance.new("TextLabel")
-		textLabel.Name = name
-		textLabel.Position = UDim2.fromScale(x, y)
-		textLabel.Size = UDim2.fromScale(w, h)
-		textLabel.BackgroundTransparency = 1
-		textLabel.TextScaled = true
-		textLabel.RichText = true
-		textLabel.Font = font
-		textLabel.TextColor3 = color
-		textLabel.Text = text
-		textLabel.TextXAlignment = if alignLeft then Enum.TextXAlignment.Left else Enum.TextXAlignment.Center
-		textLabel.TextYAlignment = if alignLeft then Enum.TextYAlignment.Top else Enum.TextYAlignment.Center
-		textLabel.Parent = gui
+
+	-- texto numa linha só, tamanho fixo (nome comprido demais termina em "...")
+	local function text(parent: Instance, name: string, x: number, y: number, w: number, h: number, value: string, color: Color3, font: Enum.Font, size: number, align: Enum.TextXAlignment?): TextLabel
+		local label = Instance.new("TextLabel")
+		label.Name = name
+		label.Position = UDim2.fromOffset(x, y)
+		label.Size = UDim2.fromOffset(w, h)
+		label.BackgroundTransparency = 1
+		label.Font = font
+		label.TextSize = size
+		label.TextColor3 = color
+		label.Text = value
+		label.TextXAlignment = align or Enum.TextXAlignment.Center
+		label.TextTruncate = Enum.TextTruncate.AtEnd
+		label.Parent = parent
+		return label
 	end
 
-	label("Title", 0.02, 0.02, 0.96, 0.11, "RANKING DOS SOBREVIVENTES", COLOR.Yellow, Enum.Font.GothamBlack)
+	local canvasWidth = width * RANKING_PIXELS
+	text(gui, "Title", 0, 8, canvasWidth, 56, "RANKING DOS SOBREVIVENTES", COLOR.Yellow, Enum.Font.GothamBlack, 48)
+
+	local margin, cardWidth, rowHeight, headerHeight = 15, 430, 42, 36
 	local columns = { { "Kills", "ABATES" }, { "Headshots", "HEADSHOTS" }, { "Points", "PONTOS" } }
-	for sectionIndex, section in { { "Best", "RECORDE EM UMA PARTIDA" }, { "Total", "TOTAL GERAL" } } do
-		local sectionX = 0.02 + (sectionIndex - 1) * 0.5
-		label("Section", sectionX, 0.15, 0.46, 0.08, section[2], if sectionIndex == 1 then Color3.fromRGB(255, 120, 90) else Color3.fromRGB(110, 200, 255), Enum.Font.GothamBlack)
+	local sections = {
+		{ "Best", "RECORDE EM UMA PARTIDA", Color3.fromRGB(255, 120, 90), 72 },
+		{ "Total", "TOTAL GERAL (SOMA DE TODAS AS PARTIDAS)", Color3.fromRGB(110, 200, 255), 366 },
+	}
+	for _, section in sections do
+		local scope, sectionTitle, sectionColor, sectionY = section[1], section[2], section[3], section[4]
+		text(gui, "Section", 0, sectionY, canvasWidth, 32, sectionTitle, sectionColor, Enum.Font.GothamBlack, 28)
+
 		for columnIndex, column in columns do
-			local columnX = sectionX + (columnIndex - 1) * (0.46 / 3)
-			label("Header", columnX, 0.25, 0.46 / 3, 0.06, column[2], COLOR.White, Enum.Font.GothamBold)
-			label(`List_{section[1]}_{column[1]}`, columnX + 0.005, 0.33, 0.46 / 3 - 0.01, 0.56, "carregando...", Color3.fromRGB(220, 220, 220), Enum.Font.GothamMedium, true)
+			local card = Instance.new("Frame")
+			card.Name = "Card"
+			card.Position = UDim2.fromOffset(margin + (columnIndex - 1) * (cardWidth + margin), sectionY + 36)
+			card.Size = UDim2.fromOffset(cardWidth, headerHeight + RANKING_ROWS * rowHeight + 6)
+			card.BackgroundColor3 = Color3.fromRGB(30, 36, 50)
+			card.BorderSizePixel = 0
+			card.Parent = gui
+			local corner = Instance.new("UICorner")
+			corner.CornerRadius = UDim.new(0, 10)
+			corner.Parent = card
+			text(card, "Header", 0, 2, cardWidth, headerHeight, column[2], COLOR.White, Enum.Font.GothamBold, 24)
+
+			local list = Instance.new("Frame")
+			list.Name = `List_{scope}_{column[1]}`
+			list.Position = UDim2.fromOffset(0, headerHeight)
+			list.Size = UDim2.fromOffset(cardWidth, RANKING_ROWS * rowHeight)
+			list.BackgroundTransparency = 1
+			list.Parent = card
+
+			for place = 1, RANKING_ROWS do
+				local row = Instance.new("Frame")
+				row.Name = `Row{place}`
+				row.Position = UDim2.fromOffset(6, (place - 1) * rowHeight)
+				row.Size = UDim2.fromOffset(cardWidth - 12, rowHeight - 4)
+				row.BackgroundColor3 = Color3.new(1, 1, 1)
+				row.BackgroundTransparency = if place % 2 == 1 then 0.94 else 1
+				row.BorderSizePixel = 0
+				row.Parent = list
+				local rowCorner = Instance.new("UICorner")
+				rowCorner.CornerRadius = UDim.new(0, 6)
+				rowCorner.Parent = row
+
+				text(row, "Place", 2, 0, 34, rowHeight - 4, `{place}.`, PODIUM_COLORS[place] or COLOR.White, Enum.Font.GothamBlack, 24)
+				local avatar = Instance.new("ImageLabel")
+				avatar.Name = "Avatar"
+				avatar.Position = UDim2.fromOffset(40, 2)
+				avatar.Size = UDim2.fromOffset(rowHeight - 8, rowHeight - 8)
+				avatar.BackgroundColor3 = Color3.fromRGB(60, 66, 80)
+				avatar.BorderSizePixel = 0
+				avatar.Visible = false
+				avatar.Parent = row
+				local avatarCorner = Instance.new("UICorner")
+				avatarCorner.CornerRadius = UDim.new(0.5, 0)
+				avatarCorner.Parent = avatar
+
+				local nameText = if place == 1 then "carregando..." else ""
+				text(row, "PlayerName", 84, 0, 200, rowHeight - 4, nameText, Color3.fromRGB(230, 230, 235), Enum.Font.GothamMedium, 24, Enum.TextXAlignment.Left)
+				text(row, "Score", cardWidth - 12 - 132, 0, 126, rowHeight - 4, "", PODIUM_COLORS[place] or COLOR.White, Enum.Font.GothamBlack, 24, Enum.TextXAlignment.Right)
+			end
 		end
 	end
-	label("Status", 0.02, 0.91, 0.96, 0.06, "carregando o ranking...", Color3.fromRGB(150, 150, 160), Enum.Font.Gotham)
+	text(gui, "Status", 0, 664, canvasWidth, 28, "carregando o ranking...", Color3.fromRGB(150, 150, 160), Enum.Font.Gotham, 22)
 
 	local light = Instance.new("PointLight")
-	light.Range = 18
+	light.Range = 24
 	light.Brightness = 1
 	light.Parent = board
 end

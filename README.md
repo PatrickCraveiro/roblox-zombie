@@ -124,7 +124,8 @@ ele, então as moedas vêm em dobro nos testes.
 
 ## Ranking (salvo na nuvem da Roblox)
 
-O quadro "RANKING DOS SOBREVIVENTES" no lobby mostra os 5 melhores em abates, headshots e pontos
+O quadro "RANKING DOS SOBREVIVENTES" no lobby mostra os 5 melhores (com a foto do avatar e o nome
+inteiro) em abates, headshots e pontos
 (pontos **ganhos**, gastar na loja não diminui), de dois jeitos:
 
 - **Recorde em uma partida**: o máximo que alguém já fez numa partida só
