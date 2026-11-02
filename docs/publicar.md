@@ -29,7 +29,8 @@
 
 ## 2. Passes (Robux)
 
-1. Creator Hub → o jogo → **Monetização → Passes → Criar um passe**: imagem (512x512), nome e
+1. Creator Hub → o jogo → **Monetização → Passes → Criar um passe**: imagem (512x512, prontas em
+   `assets/passes/`), nome e
    descrição.
 2. Abra o passe → **Vendas** → ligue **Item à venda** → coloque o preço → Salvar.
 3. Copie o **ID** do passe (o número no endereço da página) e cole no `Id` dele em
